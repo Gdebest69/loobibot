@@ -1,0 +1,11 @@
+data.lb
+/lol.py
+/settings.py
+/assets
+/music_bot
+*.iml
+*.xml
+*.json
+*.pyc
+/shelf/
+/workspace.xml
