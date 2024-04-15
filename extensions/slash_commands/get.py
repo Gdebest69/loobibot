@@ -40,71 +40,6 @@ class GetCommand(
         self.online_color = 0x00FF00
         self.offline_color = 0xFF0000
 
-    async def status(self, host: str) -> JavaStatusResponse | BedrockStatusResponse:
-        """Get status from server, which can be Java or Bedrock.
-
-        The function will ping server as Java and as Bedrock in one time, and return the first response.
-        """
-        success_task = await self.handle_exceptions(
-            *(
-                await asyncio.wait(
-                    {
-                        asyncio.create_task(
-                            self.handle_java(host), name="Get status as Java"
-                        ),
-                        asyncio.create_task(
-                            self.handle_bedrock(host), name="Get status as Bedrock"
-                        ),
-                    },
-                    return_when=asyncio.FIRST_COMPLETED,
-                )
-            )
-        )
-
-        if success_task is None:
-            raise ValueError("No tasks were successful. Is server offline?")
-
-        return success_task.result()
-
-    async def handle_exceptions(
-        self, done: set[asyncio.Task], pending: set[asyncio.Task]
-    ) -> asyncio.Task | None:
-        """Handle exceptions from tasks.
-
-        Also, cancel all pending tasks, if found correct one.
-        """
-        if len(done) == 0:
-            raise ValueError("No tasks was given to `done` set.")
-
-        for i, task in enumerate(done):
-            if task.exception() is not None:
-                if len(pending) == 0:
-                    continue
-
-                if (
-                    i == len(done) - 1
-                ):  # firstly check all items from `done` set, and then handle pending set
-                    return await self.handle_exceptions(
-                        *(
-                            await asyncio.wait(
-                                pending, return_when=asyncio.FIRST_COMPLETED
-                            )
-                        )
-                    )
-            else:
-                for pending_task in pending:
-                    pending_task.cancel()
-                return task
-
-    async def handle_java(self, host: str) -> JavaStatusResponse:
-        """A wrapper around mcstatus, to compress it in one function."""
-        return await (await JavaServer.async_lookup(host)).async_status()
-
-    async def handle_bedrock(self, host: str) -> BedrockStatusResponse:
-        """A wrapper around mcstatus, to compress it in one function."""
-        # note: `BedrockServer` doesn't have `async_lookup` method, see it's docstring
-        return await BedrockServer.lookup(host).async_status()
-
     @app_commands.command(
         name="server-icon",
         description="Get the icon for this server or group chat, if it exists",
@@ -186,7 +121,20 @@ class GetCommand(
         name="mc-server", description="Get the status of a Minecraft server"
     )
     @app_commands.describe(ip="The IP of the server")
-    async def get_mc_server(self, interaction: discord.Interaction, ip: str):
+    async def get_mc_server(
+        self, interaction: discord.Interaction, ip: str, port: int = 25565
+    ):
+        try:
+            server = await JavaServer(ip, port).async_status()
+            print(server)
+        except TimeoutError:
+            ...
+        except Exception as e:
+            raise e
+        # timeout error
+        # value error - wrong port
+        # gai error - wrong address
+        return
         await interaction.response.defer(ephemeral=True)
         # get server status using the API
         async with aiohttp.ClientSession() as session:
