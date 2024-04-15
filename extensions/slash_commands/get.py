@@ -39,9 +39,10 @@ class GetCommand(
         self.mc_api_url = "https://api.mcsrvstat.us/3"
         self.online_color = 0x00FF00
         self.offline_color = 0xFF0000
+        self.default_mc_port = 25565
 
     def address_to_str(self, ip: str, port: int):
-        if port == 25565:
+        if port == self.default_mc_port:
             return ip
         return f"{ip}:{port}"
 
@@ -126,20 +127,20 @@ class GetCommand(
         name="mc-server", description="Get the status of a Minecraft server"
     )
     @app_commands.describe(ip="The IP of the server")
-    async def get_mc_server(
-        self, interaction: discord.Interaction, ip: str, port: int = 25565
-    ):
-        # check if the port is in the ip itself (ip:port)
+    async def get_mc_server(self, interaction: discord.Interaction, ip: str):
+        # check if there is a port
         if ":" in ip:
             splitted_ip = ip.split(":")
             if len(splitted_ip) == 2 and splitted_ip[1].isdigit():
                 ip = splitted_ip[0]
                 port = int(splitted_ip[1])
             else:
-                interaction.response.send_message(
+                await interaction.response.send_message(
                     content="Invalid Address syntax", ephemeral=True
                 )
                 return
+        else:
+            port = self.default_mc_port
 
         await interaction.response.defer(ephemeral=True)
         try:
