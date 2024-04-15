@@ -1,7 +1,7 @@
 import aiohttp
 import base64
 import io
-import asyncio
+from socket import gaierror
 from mcstatus import BedrockServer, JavaServer
 from mcstatus.status_response import BedrockStatusResponse, JavaStatusResponse
 from main import *
@@ -39,6 +39,11 @@ class GetCommand(
         self.mc_api_url = "https://api.mcsrvstat.us/3"
         self.online_color = 0x00FF00
         self.offline_color = 0xFF0000
+
+    def address_to_str(self, ip: str, port: int):
+        if port == 25565:
+            return ip
+        return f"{ip}:{port}"
 
     @app_commands.command(
         name="server-icon",
@@ -124,65 +129,71 @@ class GetCommand(
     async def get_mc_server(
         self, interaction: discord.Interaction, ip: str, port: int = 25565
     ):
-        try:
-            server = await JavaServer(ip, port).async_status()
-            print(server)
-        except TimeoutError:
-            ...
-        except Exception as e:
-            raise e
-        # timeout error
-        # value error - wrong port
-        # gai error - wrong address
-        return
-        await interaction.response.defer(ephemeral=True)
-        # get server status using the API
-        async with aiohttp.ClientSession() as session:
-            async with session.get(f"{self.mc_api_url}/{ip}") as response:
-                if response.status == 200:
-                    server_status = await response.json()
-                else:
-                    await interaction.edit_original_response(
-                        content="There was a problem fetching the server"
-                    )
-                    return
-
-        if server_status["online"]:
-            embed = discord.Embed(
-                color=self.online_color,
-                title=server_status["ip"],
-                description="\n".join(server_status["motd"]["clean"]),
-            )
-            embed.set_author(name=ip)
-            embed.add_field(
-                name="Online",
-                value=f"Players: {server_status['players']['online']}/{server_status['players']['max']}",
-            )
-            embed.set_footer(text=server_status["version"])
-            if "icon" in server_status:
-                base64_image = server_status["icon"]
-                # Remove the data URI prefix
-                base64_data = base64_image.split(",")[1]
-                # Decode the base64 data
-                decoded_image = base64.b64decode(base64_data)
-                icon_file = discord.File(
-                    io.BytesIO(decoded_image),
-                    "server_icon.png",
-                )
+        # check if the port is in the ip itself (ip:port)
+        if ":" in ip:
+            splitted_ip = ip.split(":")
+            if len(splitted_ip) == 2 and splitted_ip[1].isdigit():
+                ip = splitted_ip[0]
+                port = int(splitted_ip[1])
             else:
-                icon_file = discord.File(
-                    in_folder(os.path.join("assets", "default_server_icon.png")),
-                    "server_icon.png",
+                interaction.response.send_message(
+                    content="Invalid Address syntax", ephemeral=True
                 )
-            embed.set_thumbnail(url="attachment://server_icon.png")
+                return
+
+        await interaction.response.defer(ephemeral=True)
+        try:
+            status = await JavaServer(ip, port).async_status()
+        except ValueError:  # invalid port
+            await interaction.edit_original_response(content="Invalid port")
+            return
+        except gaierror:  # invalid ip address
+            await interaction.edit_original_response(content="Invalid Address")
+            return
+        except Exception as e:
+            if (
+                isinstance(e, TimeoutError)
+                or isinstance(e, ConnectionRefusedError)
+                or isinstance(e, OSError)
+            ):
+                embed = discord.Embed(
+                    color=self.offline_color,
+                    title=self.address_to_str(ip, port),
+                    description="Offline",
+                )
+                await interaction.edit_original_response(embed=embed)
+                return
             await interaction.edit_original_response(
-                embed=embed, attachments=[icon_file]
+                content=f"Something went wrong when trying to check the status of {self.address_to_str(ip, port)},"
+                + f" if this problem continues, please report it to {mention_user(OWNER_ID)}"
             )
-        else:  # server is offline
-            embed = discord.Embed(
-                color=self.offline_color, title=ip, description="Offline"
+            raise e
+
+        embed = discord.Embed(
+            color=self.online_color,
+            title=self.address_to_str(ip, port),
+            description=status.motd.to_plain(),
+        )
+        embed.add_field(
+            name="Online",
+            value=f"Players: {status.players.online}/{status.players.max}",
+        )
+        embed.set_footer(text=status.version.name)
+        if status.icon is not None:
+            decoded_image = base64.b64decode(
+                status.icon.removeprefix("data:image/png;base64,")
             )
-            await interaction.edit_original_response(embed=embed)
+            icon_file = discord.File(
+                io.BytesIO(decoded_image),
+                "server_icon.png",
+            )
+        else:
+            icon_file = discord.File(
+                in_folder(os.path.join("assets", "default_server_icon.png")),
+                "server_icon.png",
+            )
+        embed.set_thumbnail(url="attachment://server_icon.png")
+        await interaction.edit_original_response(embed=embed, attachments=[icon_file])
 
     def sound_to_str(self, sound: discord.SoundboardSound):
         if sound.emoji is not None and not sound.emoji.is_custom_emoji():
