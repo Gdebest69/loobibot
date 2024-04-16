@@ -112,7 +112,9 @@ class GetCommand(
                 "Can't find an emoji with that name", ephemeral=True
             )
         else:
-            await interaction.response.send_message(emoji.url, ephemeral=True)
+            await interaction.response.send_message(
+                f"{emoji.url}\nname: `{emoji.name}`\nid: `{emoji.id}`", ephemeral=True
+            )
 
     @app_commands.command(
         name="mc-server", description="Get the status of a Minecraft server"

@@ -3,8 +3,18 @@ from main import *
 
 
 class EmojiModal(Modal):
-    emoji_name = TextInput(label="Emoji name", placeholder="The name of the emoji")
-    emoji_id = TextInput(label="Emoji id", placeholder="The id of the emoji")
+    emoji_name = TextInput(
+        label="Emoji name",
+        placeholder="The name of the emoji",
+        min_length=1,
+        max_length=100,
+    )
+    emoji_id = TextInput(
+        label="Emoji id",
+        placeholder="The id of the emoji",
+        min_length=1,
+        max_length=100,
+    )
 
     def __init__(self, message: discord.Message) -> None:
         super().__init__(title="Add the emoji data", timeout=None)
