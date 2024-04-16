@@ -1,5 +1,4 @@
 from discord.ui import Modal, TextInput
-from discord.utils import MISSING
 from main import *
 
 
