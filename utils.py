@@ -47,8 +47,17 @@ def print_command(interaction: discord.Interaction):
                     if discriminator != "0":
                         username += "#" + discriminator
                     return username, discord.User
-            else:
-                raise NotImplementedError("no message implementation yet :o")
+            elif "messages" in interaction.data["resolved"]:
+                messages_data = interaction.data["resolved"]["messages"]
+                for message_data in messages_data.values():
+                    guild_id = (
+                        interaction.guild_id if is_in_guild(interaction) else "@me"
+                    )
+                    target = (
+                        f"https://discord.com/channels/{guild_id}"
+                        + f"/{interaction.channel_id}/{message_data['id']}"
+                    )
+                    return target, discord.Message
 
         target, target_type = get_target(interaction)
         if target_type == discord.Message:
