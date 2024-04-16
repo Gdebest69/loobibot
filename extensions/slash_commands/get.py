@@ -1,9 +1,8 @@
-import aiohttp
+import asyncio
 import base64
 import io
 from socket import gaierror
 from mcstatus import BedrockServer, JavaServer
-from mcstatus.status_response import BedrockStatusResponse, JavaStatusResponse
 from main import *
 
 """
@@ -39,12 +38,20 @@ class GetCommand(
         self.mc_api_url = "https://api.mcsrvstat.us/3"
         self.online_color = 0x00FF00
         self.offline_color = 0xFF0000
-        self.default_mc_port = 25565
+        self.java_port = 25565
+        self.bedrock_port = 19132
 
     def address_to_str(self, ip: str, port: int):
-        if port == self.default_mc_port:
+        if port == self.java_port or port == self.bedrock_port or port == 0:
             return ip
         return f"{ip}:{port}"
+
+    def get_port(self, server_type: str):
+        if server_type == "Java":
+            return self.java_port
+        if server_type == "Bedrock":
+            return self.bedrock_port
+        return 0
 
     @app_commands.command(
         name="server-icon",
@@ -126,8 +133,20 @@ class GetCommand(
     @app_commands.command(
         name="mc-server", description="Get the status of a Minecraft server"
     )
-    @app_commands.describe(ip="The IP of the server")
-    async def get_mc_server(self, interaction: discord.Interaction, ip: str):
+    @app_commands.choices(
+        server_type=[
+            app_commands.Choice(name="Java", value="Java"),
+            app_commands.Choice(name="Bedrock", value="Bedrock"),
+        ]
+    )
+    @app_commands.describe(
+        ip="The IP of the server",
+        server_type="Java or Bedrock server, leave empty to try both",
+    )
+    @app_commands.rename(server_type="type")
+    async def get_mc_server(
+        self, interaction: discord.Interaction, ip: str, server_type: str = "both"
+    ):
         # check if there is a port
         if ":" in ip:
             splitted_ip = ip.split(":")
@@ -140,11 +159,41 @@ class GetCommand(
                 )
                 return
         else:
-            port = self.default_mc_port
+            port = self.get_port(server_type)
 
         await interaction.response.defer(ephemeral=True)
         try:
-            status = await JavaServer(ip, port).async_status()
+            if server_type == "Java":
+                status = await JavaServer(ip, port).async_status()
+            elif server_type == "Bedrock":
+                status = await BedrockServer(ip, port).async_status()
+            elif server_type == "both":
+                if port == 0:
+                    java = JavaServer(ip, self.java_port).async_status()
+                    bedrock = BedrockServer(ip, self.bedrock_port).async_status()
+                else:
+                    java = JavaServer(ip, port).async_status()
+                    bedrock = BedrockServer(ip, port).async_status()
+                done, pending = await asyncio.wait(
+                    (
+                        asyncio.create_task(java, name="Java"),
+                        asyncio.create_task(bedrock, name="Bedrock"),
+                    ),
+                    return_when=asyncio.FIRST_COMPLETED,
+                )
+                for task in done:
+                    exception = task.exception()
+                    if exception is not None:
+                        raise exception
+                    status = task.result()
+                    server_type = task.get_name()
+                for task in pending:
+                    task.cancel()
+            else:
+                await interaction.edit_original_response(
+                    content=f"Invalid server type: {server_type}"
+                )
+                return
         except ValueError:  # invalid port
             await interaction.edit_original_response(content="Invalid port")
             return
@@ -175,26 +224,31 @@ class GetCommand(
             title=self.address_to_str(ip, port),
             description=status.motd.to_plain(),
         )
+        embed.set_author(name=f"{server_type} server")
         embed.add_field(
             name="Online",
             value=f"Players: {status.players.online}/{status.players.max}",
         )
         embed.set_footer(text=status.version.name)
-        if status.icon is not None:
-            decoded_image = base64.b64decode(
-                status.icon.removeprefix("data:image/png;base64,")
-            )
-            icon_file = discord.File(
-                io.BytesIO(decoded_image),
-                "server_icon.png",
-            )
+        if server_type == "Java":
+            if status.icon is not None:
+                decoded_image = base64.b64decode(
+                    status.icon.removeprefix("data:image/png;base64,")
+                )
+                icon_file = discord.File(
+                    io.BytesIO(decoded_image),
+                    "server_icon.png",
+                )
+            else:
+                icon_file = discord.File(
+                    in_folder(os.path.join("assets", "default_server_icon.png")),
+                    "server_icon.png",
+                )
+            attachments = [icon_file]
+            embed.set_thumbnail(url="attachment://server_icon.png")
         else:
-            icon_file = discord.File(
-                in_folder(os.path.join("assets", "default_server_icon.png")),
-                "server_icon.png",
-            )
-        embed.set_thumbnail(url="attachment://server_icon.png")
-        await interaction.edit_original_response(embed=embed, attachments=[icon_file])
+            attachments = []
+        await interaction.edit_original_response(embed=embed, attachments=attachments)
 
     def sound_to_str(self, sound: discord.SoundboardSound):
         if sound.emoji is not None and not sound.emoji.is_custom_emoji():
