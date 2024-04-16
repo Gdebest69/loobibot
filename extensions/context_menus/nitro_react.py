@@ -43,6 +43,15 @@ class NitroReactCommand(commands.Cog):
     async def nitro_react(
         self, interaction: discord.Interaction, message: discord.Message
     ):
+        if (
+            is_in_guild(interaction)
+            and not interaction.user.guild_permissions.administrator
+        ):
+            await interaction.response.send_message(
+                "You must have administrator permissions to use this", ephemeral=True
+            )
+            return
+
         await interaction.response.send_modal(EmojiModal(message))
 
 
