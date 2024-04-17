@@ -3,27 +3,47 @@ import base64
 import io
 from socket import gaierror
 from mcstatus import BedrockServer, JavaServer
+from mcstatus.status_response import BedrockStatusResponse, JavaStatusResponse
 from main import *
 
-"""
-from pydub import AudioSegment
-class ConvertToMp3View(discord.ui.View):
-    def __init__(self, sound: discord.SoundboardSound):
-        super().__init__(timeout=TIMEOUT)
-        self.sound = sound
 
-    @discord.ui.button(label="Convert to .mp3", style=discord.ButtonStyle.green)
-    async def convert_to_mp3(self, interaction: discord.Interaction, button):
-        sound_file = io.BytesIO(await self.sound.read())
-        sound_file.seek(0)
-        audio_data: AudioSegment = AudioSegment.from_file(sound_file)
-        mp3_output = io.BytesIO()
-        audio_data.export(mp3_output, format="mp3")
-        mp3_output.seek(0)
-        await interaction.response.edit_message(
-            attachments=[discord.File(mp3_output, self.sound.name + ".mp3")], view=None
-        )
-"""
+async def handle_exceptions(
+    done: set[asyncio.Task], pending: set[asyncio.Task]
+) -> asyncio.Task | None:
+    """Handle exceptions from tasks.
+
+    Also, cancel all pending tasks, if found correct one.
+    """
+    if len(done) == 0:
+        raise ValueError("No tasks was given to `done` set.")
+
+    for i, task in enumerate(done):
+        if task.exception() is not None:
+            if len(pending) == 0:
+                continue
+
+            if (
+                i == len(done) - 1
+            ):  # firstly check all items from `done` set, and then handle pending set
+                return await handle_exceptions(
+                    *(await asyncio.wait(pending, return_when=asyncio.FIRST_COMPLETED))
+                )
+        else:
+            for pending_task in pending:
+                pending_task.cancel()
+            return task
+
+
+async def handle_java(host: str) -> JavaStatusResponse:
+    """A wrapper around mcstatus, to compress it in one function."""
+    return await (await JavaServer.async_lookup(host)).async_status()
+
+
+async def handle_bedrock(host: str) -> BedrockStatusResponse:
+    """A wrapper around mcstatus, to compress it in one function."""
+    # note: `BedrockServer` doesn't have `async_lookup` method, see it's docstring
+    # I added timeout=1 because for some reason it takes 3 times the amount of timeout
+    return await BedrockServer.lookup(host, timeout=1).async_status()
 
 
 @app_commands.user_install()
@@ -40,18 +60,6 @@ class GetCommand(
         self.offline_color = 0xFF0000
         self.java_port = 25565
         self.bedrock_port = 19132
-
-    def address_to_str(self, ip: str, port: int):
-        if port == self.java_port or port == self.bedrock_port or port == 0:
-            return ip
-        return f"{ip}:{port}"
-
-    def get_port(self, server_type: str):
-        if server_type == "Java":
-            return self.java_port
-        if server_type == "Bedrock":
-            return self.bedrock_port
-        return 0
 
     @app_commands.command(
         name="server-icon",
@@ -147,51 +155,28 @@ class GetCommand(
     async def get_mc_server(
         self, interaction: discord.Interaction, ip: str, server_type: str = "both"
     ):
-        # check if there is a port
-        if ":" in ip:
-            splitted_ip = ip.split(":")
-            if len(splitted_ip) == 2 and splitted_ip[1].isdigit():
-                ip = splitted_ip[0]
-                port = int(splitted_ip[1])
-            else:
-                await interaction.response.send_message(
-                    content="Invalid Address syntax", ephemeral=True
-                )
-                return
-        else:
-            port = self.get_port(server_type)
-
         await interaction.response.defer(ephemeral=True)
         try:
             if server_type == "Java":
-                status = await JavaServer(ip, port).async_status()
+                status = await handle_java(ip)
             elif server_type == "Bedrock":
-                status = await BedrockServer(ip, port).async_status()
+                status = await handle_bedrock(ip)
             elif server_type == "both":
-                if port == 0:
-                    java = JavaServer(ip, self.java_port).async_status()
-                    bedrock = BedrockServer(ip, self.bedrock_port).async_status()
-                else:
-                    java = JavaServer(ip, port).async_status()
-                    bedrock = BedrockServer(ip, port).async_status()
-                done, pending = await asyncio.wait(
-                    (
-                        asyncio.create_task(java, name="Java"),
-                        asyncio.create_task(bedrock, name="Bedrock"),
-                    ),
-                    return_when=asyncio.FIRST_COMPLETED,
+                success_task = await handle_exceptions(
+                    *(
+                        await asyncio.wait(
+                            {
+                                asyncio.create_task(handle_java(ip), name="Java"),
+                                asyncio.create_task(handle_bedrock(ip), name="Bedrock"),
+                            },
+                            return_when=asyncio.FIRST_COMPLETED,
+                        )
+                    )
                 )
-                for task in done:
-                    exception = task.exception()
-                    if exception is not None:
-                        raise exception
-                    status = task.result()
-                    server_type = task.get_name()
-                for task in pending:
-                    try:
-                        task.cancel()
-                    except asyncio.CancelledError:
-                        pass  # Ignore the CancelledError
+                if success_task is None:
+                    raise TimeoutError("No tasks were successful. Is server offline?")
+                status = success_task.result()
+                server_type = success_task.get_name()
             else:
                 await interaction.edit_original_response(
                     content=f"Invalid server type: {server_type}"
@@ -211,20 +196,20 @@ class GetCommand(
             ):
                 embed = discord.Embed(
                     color=self.offline_color,
-                    title=self.address_to_str(ip, port),
+                    title=ip,
                     description="Offline",
                 )
                 await interaction.edit_original_response(embed=embed)
                 return
             await interaction.edit_original_response(
-                content=f"Something went wrong when trying to check the status of {self.address_to_str(ip, port)},"
+                content=f"Something went wrong when trying to check the status of {ip},"
                 + f" if this problem continues, please report it to {mention_user(OWNER_ID)}"
             )
             raise e
 
         embed = discord.Embed(
             color=self.online_color,
-            title=self.address_to_str(ip, port),
+            title=ip,
             description=status.motd.to_plain(),
         )
         embed.set_author(name=f"{server_type} server")
