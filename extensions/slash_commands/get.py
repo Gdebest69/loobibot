@@ -188,11 +188,10 @@ class GetCommand(
                     status = task.result()
                     server_type = task.get_name()
                 for task in pending:
-                    for task in pending:
-                        try:
-                            task.cancel()
-                        except asyncio.CancelledError:
-                            pass  # Ignore the CancelledError
+                    try:
+                        task.cancel()
+                    except asyncio.CancelledError:
+                        pass  # Ignore the CancelledError
             else:
                 await interaction.edit_original_response(
                     content=f"Invalid server type: {server_type}"
