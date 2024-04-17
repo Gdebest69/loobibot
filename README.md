@@ -2,7 +2,7 @@
 
 ## Install any requirements
 
- - [Python](https://www.python.org/downloads/) -  Any python version above 3.9 should work
+ - [Python](https://www.python.org/downloads/) -  Any python version above 3.9 should work.
  - [Git](https://git-scm.com/downloads)
  
 ## Install the repository and necessary libraries
