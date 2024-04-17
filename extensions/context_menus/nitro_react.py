@@ -50,6 +50,7 @@ class NitroReactCommand(commands.Cog):
         )
         self.bot.tree.add_command(self.nitro_react_ctx_menu)
 
+    @app_commands.default_permissions()
     async def nitro_react(
         self, interaction: discord.Interaction, message: discord.Message
     ):
