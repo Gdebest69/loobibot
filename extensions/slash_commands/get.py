@@ -55,11 +55,8 @@ class GetCommand(
 ):
     def __init__(self, bot: LoobiBot):
         self.bot = bot
-        self.mc_api_url = "https://api.mcsrvstat.us/3"
         self.online_color = 0x00FF00
         self.offline_color = 0xFF0000
-        self.java_port = 25565
-        self.bedrock_port = 19132
 
     @app_commands.command(
         name="server-icon",
