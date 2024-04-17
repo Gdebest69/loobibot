@@ -1,9 +1,11 @@
-# Requirements
-
- 1. [Python](https://www.python.org/downloads/) -  Any python version above 3.9 should work
- 2. [Git](https://git-scm.com/downloads)
-
 # Installation
+
+## Install any requirements
+
+ - [Python](https://www.python.org/downloads/) -  Any python version above 3.9 should work
+ - [Git](https://git-scm.com/downloads)
+ 
+## Install the repository and necessary libraries
 
  1. Clone the repository: `git clone https://github.com/Gdebest69/loobibot.git`
  2. Go to the root directory: `cd loobibot`
