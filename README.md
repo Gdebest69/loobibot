@@ -34,7 +34,7 @@
 - Repeat the uninstall process until there aren't any packages named discord or discord.py listed when running `pip list`
 4. Install the newly created package: `pip install discord.py\`
 
-### Option 2: Install manually from discord.py (Hard)
+### Option 2: install manually from discord.py (Hard)
 
  1. Clone the necessary discord.py repositories: `.\create_library`. It should create a discord.py
  folder inside the root directory. To check if it worked:
