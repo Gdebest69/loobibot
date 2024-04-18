@@ -17,7 +17,9 @@ class EmojiModal(Modal):
     )
 
     def __init__(self, message: discord.Message) -> None:
-        super().__init__(title="Add the emoji data", timeout=None)
+        super().__init__(
+            title="The emoji must be in a server which I'm in", timeout=None
+        )
         self.message = message
 
     async def on_submit(self, interaction: discord.Interaction):
