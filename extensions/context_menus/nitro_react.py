@@ -40,6 +40,13 @@ class EmojiModal(Modal):
             )
         except discord.errors.HTTPException:
             await interaction.response.send_message("Unknown emoji", ephemeral=True)
+        except Exception as e:
+            await interaction.response.send_message(
+                "Something went wrong when trying to react to the message,"
+                + f" if this problem continues, please report it to {mention_user(OWNER_ID)}",
+                ephemeral=True,
+            )
+            raise e
 
 
 class NitroReactCommand(commands.Cog):
