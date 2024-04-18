@@ -1,6 +1,7 @@
 data.lb
 /lol.py
 /settings.py
+/run_main.bat
 /assets
 /music_bot
 *.iml
