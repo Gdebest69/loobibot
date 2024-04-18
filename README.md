@@ -24,7 +24,7 @@ folder inside the root directory. To check if it worked:
 - Check for local git branches: `git branch`
 - The output should look like this:
 ```
-master
+  master
 * merged
 ```
 - Go back to the root directory: `cd ..`
@@ -44,7 +44,7 @@ folder inside the root directory. To check if it worked:
 - Check for local git branches: `git branch`
 - The output should look like this:
 ```
-master
+  master
 * merged
 ```
 - Go back to the root directory: `cd ..`
