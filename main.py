@@ -122,7 +122,6 @@ class LoobiBot(commands.Bot):
                 self.__guilds_data = data["guilds"]
                 self.__users_data = data["users"]
                 self.vacation = data["vacation"]
-                self.q_table = data["q_table"]
         except Exception as e:
             if not isinstance(e, FileNotFoundError):
                 with open(in_folder("data.lb"), "rb") as reader_file:
@@ -140,7 +139,6 @@ class LoobiBot(commands.Bot):
                     "guilds": self.__guilds_data,
                     "users": self.__users_data,
                     "vacation": self.vacation,
-                    "q_table": self.q_table,
                 },
                 file,
             )
