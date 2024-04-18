@@ -79,7 +79,7 @@ class GetCommand(
             return []
 
         guessed_emoji = await self.emoji_conventer(
-            await self.bot.get_context(interaction), current
+            await self.bot.get_context(interaction), current.rstrip()
         )
         if guessed_emoji is None:
             choices = [
