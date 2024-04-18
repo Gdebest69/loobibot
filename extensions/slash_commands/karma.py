@@ -3,6 +3,90 @@ from discord import ButtonStyle
 from main import *
 
 
+class KarmaListView(View):
+    def __init__(self, bot: LoobiBot, page: int):
+        super().__init__(timeout=TIMEOUT)
+        self.message = None
+        self.page = page
+        self.bot = bot
+
+        self.left_button = Button(emoji="⬅", style=ButtonStyle.blurple)
+        self.left_button.callback = self.go_left
+        self.add_item(self.left_button)
+
+        self.right_button = Button(emoji="➡", style=ButtonStyle.blurple)
+        self.right_button.callback = self.go_right
+        self.add_item(self.right_button)
+
+    async def go_left(self, interaction: discord.Interaction):
+        self.page -= 1
+        await self.send_message(interaction, edit=True)
+
+    async def go_right(self, interaction: discord.Interaction):
+        self.page += 1
+        await self.send_message(interaction, edit=True)
+
+    async def send_message(self, interaction: discord.Interaction, edit: bool = False):
+        # page check
+        last_page = (
+            len(self.bot.get_guild_data(interaction.guild_id).karma)
+            // MAX_VALUES_PER_PAGE
+            + 1
+        )
+        if not 1 <= self.page <= last_page:
+            await interaction.response.send_message(
+                f"Page number must be between 1 and {last_page}", ephemeral=True
+            )
+            return
+
+        start_index = (self.page - 1) * MAX_VALUES_PER_PAGE
+        end_index = start_index + MAX_VALUES_PER_PAGE
+        member_list = []
+        amount_list = []
+        top_karma = sorted(
+            self.bot.get_guild_data(interaction.guild_id).karma.items(),
+            reverse=True,
+            key=lambda item: item[1],
+        )[start_index:end_index]
+        for i in range(len(top_karma)):
+            member_list.append(
+                f"`#{i + start_index + 1}` {mention_user(top_karma[i][0])}"
+            )
+            amount_list.append(str(top_karma[i][1]))
+
+        if not member_list:
+            await interaction.response.send_message(
+                "There aren't any members with karma", ephemeral=True
+            )
+            return
+
+        members_str = "\n".join(member_list)
+        amounts_str = "\n".join(amount_list)
+        embed = discord.Embed(color=EMBED_COLOR, title="Karma leaderboard")
+        embed.add_field(name="Members", value=members_str, inline=True)
+        embed.add_field(name="Karma", value=amounts_str, inline=True)
+        embed.set_footer(text=f"Page: {self.page}/{last_page}")
+
+        if self.page <= 1:
+            self.left_button.disabled = True
+        else:
+            self.left_button.disabled = False
+        if self.page >= last_page:
+            self.right_button.disabled = True
+        else:
+            self.right_button.disabled = False
+
+        if edit:
+            await interaction.response.edit_message(embed=embed, view=self)
+        else:
+            await interaction.response.send_message(embed=embed, view=self)
+            self.message = await interaction.original_response()
+
+    async def on_timeout(self):
+        if self.message is not None:
+            await self.message.edit(view=None)
+
+
 @app_commands.guild_only()
 class KarmaCommand(
     commands.GroupCog, name="karma", description="Commands related to karma"
@@ -66,92 +150,7 @@ class KarmaCommand(
             await must_use_in_guild(interaction)
             return
 
-        class KarmaListView(View):
-            def __init__(self, bot: LoobiBot):
-                super().__init__(timeout=TIMEOUT)
-                self.message = None
-                self.page = page
-                self.bot = bot
-
-                self.left_button = Button(emoji="⬅", style=ButtonStyle.blurple)
-                self.left_button.callback = self.go_left
-                self.add_item(self.left_button)
-
-                self.right_button = Button(emoji="➡", style=ButtonStyle.blurple)
-                self.right_button.callback = self.go_right
-                self.add_item(self.right_button)
-
-            async def go_left(self, interaction: discord.Interaction):
-                self.page -= 1
-                await self.send_message(interaction, edit=True)
-
-            async def go_right(self, interaction: discord.Interaction):
-                self.page += 1
-                await self.send_message(interaction, edit=True)
-
-            async def send_message(
-                self, interaction: discord.Interaction, edit: bool = False
-            ):
-                # page check
-                last_page = (
-                    len(self.bot.get_guild_data(interaction.guild_id).karma)
-                    // MAX_VALUES_PER_PAGE
-                    + 1
-                )
-                if not 1 <= self.page <= last_page:
-                    await interaction.response.send_message(
-                        f"Page number must be between 1 and {last_page}", ephemeral=True
-                    )
-                    return
-
-                start_index = (self.page - 1) * MAX_VALUES_PER_PAGE
-                end_index = start_index + MAX_VALUES_PER_PAGE
-                member_list = []
-                amount_list = []
-                top_karma = sorted(
-                    self.bot.get_guild_data(interaction.guild_id).karma.items(),
-                    reverse=True,
-                    key=lambda item: item[1],
-                )[start_index:end_index]
-                for i in range(len(top_karma)):
-                    member_list.append(
-                        f"`#{i + start_index + 1}` {mention_user(top_karma[i][0])}"
-                    )
-                    amount_list.append(str(top_karma[i][1]))
-
-                if not member_list:
-                    await interaction.response.send_message(
-                        "There aren't any members with karma", ephemeral=True
-                    )
-                    return
-
-                members_str = "\n".join(member_list)
-                amounts_str = "\n".join(amount_list)
-                embed = discord.Embed(color=EMBED_COLOR, title="Karma leaderboard")
-                embed.add_field(name="Members", value=members_str, inline=True)
-                embed.add_field(name="Karma", value=amounts_str, inline=True)
-                embed.set_footer(text=f"Page: {self.page}/{last_page}")
-
-                if self.page <= 1:
-                    self.left_button.disabled = True
-                else:
-                    self.left_button.disabled = False
-                if self.page >= last_page:
-                    self.right_button.disabled = True
-                else:
-                    self.right_button.disabled = False
-
-                if edit:
-                    await interaction.response.edit_message(embed=embed, view=self)
-                else:
-                    await interaction.response.send_message(embed=embed, view=self)
-                    self.message = await interaction.original_response()
-
-            async def on_timeout(self):
-                if self.message is not None:
-                    await self.message.edit(view=None)
-
-        await KarmaListView(self.bot).send_message(interaction)
+        await KarmaListView(self.bot, page).send_message(interaction)
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
