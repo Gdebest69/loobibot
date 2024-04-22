@@ -6,6 +6,8 @@ X_EMOJI = "❌"
 O_EMOJI = "⭕"
 EMPTY = "\u200e"
 
+bot: LoobiBot = None
+
 
 class TicTacToeButton(Button):
     def __init__(self, x: int, y: int):
@@ -162,7 +164,8 @@ class TicTacToeView(View):
         for row in self.grid:
             if EMPTY in row:
                 await self.send_message(interaction, edit=True)
-                # add loobi bot support here?
+                # hell yeah bitch
+                # TODO: check if oponent is loobi bot, than use a minimax function or something to play
                 return
 
         await self.end_game(interaction, None)
@@ -210,7 +213,7 @@ async def game_tic_tac_toe(
         return
 
     # opponent check
-    if opponent is not None and opponent.bot:
+    if opponent is not None and opponent.bot and opponent.id != bot.user.id:
         await interaction.response.send_message(
             "You can't play against other bots", ephemeral=True
         )
@@ -219,5 +222,7 @@ async def game_tic_tac_toe(
     await TicTacToeView(interaction.user, opponent, shape).send_message(interaction)
 
 
-async def setup(bot: LoobiBot):
-    bot.game_command.add_command(game_tic_tac_toe)
+async def setup(loobibot: LoobiBot):
+    global bot
+    bot = loobibot
+    loobibot.game_command.add_command(game_tic_tac_toe)
