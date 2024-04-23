@@ -5,6 +5,7 @@ from discord import ButtonStyle
 X_EMOJI = "❌"
 O_EMOJI = "⭕"
 EMPTY = "\u200e"
+TIE = 0
 
 bot: LoobiBot = None
 
@@ -91,7 +92,7 @@ class TicTacToeView(View):
         self.cancel_button = None
         self.moves = 0
 
-        self.grid = []
+        self.grid: list[list[str]] = []
         for y in range(3):
             row = []
             for x in range(3):
@@ -102,6 +103,32 @@ class TicTacToeView(View):
         self.cancel_button = Button(label="Cancel", style=ButtonStyle.red)
         self.cancel_button.callback = self.cancel_game
         self.add_item(self.cancel_button)
+
+    def get_state(self, grid=None):
+        if grid is None:
+            grid = self.grid
+        # Check rows, columns, and diagonals for a win
+        for i in range(3):
+            # Check rows
+            if grid[i][0] == grid[i][1] == grid[i][2] and grid[i][0] != EMPTY:
+                return grid[i][0]
+
+            # Check columns
+            if grid[0][i] == grid[1][i] == grid[2][i] and grid[0][i] != EMPTY:
+                return grid[0][i]
+
+        # Check diagonals
+        if grid[0][0] == grid[1][1] == grid[2][2] and grid[0][0] != EMPTY:
+            return grid[0][0]
+        if grid[0][2] == grid[1][1] == grid[2][0] and grid[0][2] != EMPTY:
+            return grid[0][2]
+
+        # Check for a draw (tie)
+        for row in grid:
+            if EMPTY in row:
+                return None
+
+        return TIE
 
     async def send_message(self, interaction: discord.Interaction, edit: bool = False):
         embed = discord.Embed(
@@ -128,47 +155,15 @@ class TicTacToeView(View):
             )
 
     async def update_game(self, interaction: discord.Interaction, player: Player):
-        # Check rows, columns, and diagonals for a win
-        for i in range(3):
-            # Check rows
-            if (
-                self.grid[i][0] == self.grid[i][1] == self.grid[i][2]
-                and self.grid[i][0] != EMPTY
-            ):
-                await self.end_game(interaction, player)
-                return
-
-            # Check columns
-            if (
-                self.grid[0][i] == self.grid[1][i] == self.grid[2][i]
-                and self.grid[0][i] != EMPTY
-            ):
-                await self.end_game(interaction, player)
-                return
-
-        # Check diagonals
-        if (
-            self.grid[0][0] == self.grid[1][1] == self.grid[2][2]
-            and self.grid[0][0] != EMPTY
-        ):
+        state = self.get_state()
+        if state is None:  # The game is still going
+            # hell yeah bitch
+            # TODO: check if oponent is loobi bot, than use a minimax function or something to play
+            await self.send_message(interaction, edit=True)
+        elif state == TIE:
+            await self.end_game(interaction, None)
+        else:
             await self.end_game(interaction, player)
-            return
-        if (
-            self.grid[0][2] == self.grid[1][1] == self.grid[2][0]
-            and self.grid[0][2] != EMPTY
-        ):
-            await self.end_game(interaction, player)
-            return
-
-        # Check for a draw (tie)
-        for row in self.grid:
-            if EMPTY in row:
-                await self.send_message(interaction, edit=True)
-                # hell yeah bitch
-                # TODO: check if oponent is loobi bot, than use a minimax function or something to play
-                return
-
-        await self.end_game(interaction, None)
 
     async def end_game(self, interaction: discord.Interaction, player: Player = None):
         for item in self.children:
@@ -187,6 +182,40 @@ class TicTacToeView(View):
                 value=player,
             )
         await interaction.response.edit_message(embed=embed, view=self)
+
+
+def minimax_magic_shit(
+    game: TicTacToeView, grid, bot_shape: str, current_player: Player
+):
+    scores = [0] * 9
+    for x, y in tic_tac_toe_range():
+        copied_grid = [[tile for tile in row] for row in grid]
+        copied_grid[y][x] = current_player.shape
+        state = game.get_state(copied_grid)
+        index = y * 3 + x % 3
+        if state is None:
+            player = (
+                game.player2 if game.current_player == game.player1 else game.player1
+            )
+            scores[index] = minimax_magic_shit(game, copied_grid, bot_shape, player)
+        if state == TIE:
+            scores[index] = 0
+        elif state == bot_shape:
+            scores[index] = 1
+        else:
+            scores[index] = -1
+    # get argmax
+    index = 0
+    for i in range(1, len(scores)):
+        if scores[i] > scores[index]:
+            index = i
+    return index
+
+
+def tic_tac_toe_range():
+    for y in range(3):
+        for x in range(3):
+            yield (x, y)
 
 
 @app_commands.command(
