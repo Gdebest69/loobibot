@@ -1,3 +1,4 @@
+import random
 from main import *
 from discord.ui import View, Button
 from discord import ButtonStyle
@@ -8,6 +9,7 @@ EMPTY = "\u200e"
 TIE = 0
 
 bot: LoobiBot = None
+q_table = None
 
 
 class TicTacToeButton(Button):
@@ -174,28 +176,23 @@ class TicTacToeView(View):
     ):
         state = self.get_state()
         if state is None:  # The game is still going
-            # hell yeah bitch
-            # TODO: check if oponent is loobi bot, than use a minimax function or something to play
             await self.send_message(obj, edit=True)
+            # if playing against my bot
             if (
                 self.current_player.user is not None
                 and self.current_player.user.id == bot.user.id
             ):
-                scores = []
-                for x, y in tic_tac_toe_range():
-                    if self.grid[y][x] != EMPTY:
-                        scores.append(-100000)
-                    else:
-                        scores.append(minimax_magic_shit(self, self.grid, self.player2))
-                print(scores)
-                index = 0
-                for i in range(1, len(scores)):
-                    if scores[i] > scores[index]:
-                        index = i
-                x, y = index % 3, index // 3
+                obs = get_obs(self)
+                s1 = hash_obs(obs)
+                if not s1 in q_table:
+                    q_table[s1] = [0] * 9
+                    action = random_action(obs)
+                else:
+                    action = best_action(q_table[s1], obs)
+                index = action
                 self.buttons[index].emoji = self.current_player.shape
                 self.buttons[index].label = None
-                self.grid[y][x] = self.current_player.shape
+                self.grid[index // 3][index % 3] = self.current_player.shape
                 player = self.current_player
                 self.current_player = self.player1
                 self.moves += 1
@@ -231,49 +228,47 @@ class TicTacToeView(View):
             await obj.response.edit_message(embed=embed, view=self)
 
 
-def minimax_magic_shit(game: TicTacToeView, grid, current_player: Player):
-    # Base case: check if the game has ended
-    state = game.get_state(grid)
-    if state == game.player1.shape:
-        return -1
-    elif state == game.player2.shape:
-        return 1
-    elif state == TIE:
-        return 0
-
-    scores = []
-
-    # Loop through all possible moves
-    for x, y in tic_tac_toe_range():
-        if grid[y][x] != EMPTY:
-            scores.append(-100000)
-            continue
-
-        # Make a copy of the game state and simulate the move
-        next_grid = [[tile for tile in row] for row in grid]
-        next_grid[y][x] = current_player.shape
-
-        # Recursive call to minimax for the next player
-        score = minimax_magic_shit(
-            game,
-            next_grid,
-            game.player1 if current_player == game.player2 else game.player2,
-        )
-
-        # Append the score for the current move
-        scores.append(score)
-
-    # Return the maximum score if current player is PLAYER2, else return the minimum score
-    if current_player == game.player2:
-        return max(scores)
-    else:
-        return min(scores)
+def random_action(obs: list[int]):
+    """
+    Returns a random action in a specific observation
+    """
+    return random.choice([i for i in range(len(obs)) if obs[i] == 0])
 
 
-def tic_tac_toe_range():
-    for y in range(3):
-        for x in range(3):
-            yield (x, y)
+def best_action(q_actions: list[float], obs: list[int]):
+    """
+    Returns the best action in a specific observation from a Q actions list
+    """
+    best_action_index = 0
+    while obs[best_action_index] != 0:
+        best_action_index += 1
+    for i in range(best_action_index + 1, len(obs)):
+        if obs[i] == 0 and q_actions[i] > q_actions[best_action_index]:
+            best_action_index = i
+    return best_action_index
+
+
+def hash_obs(obs: list[int]):
+    """
+    Hashes the observation so it can be used as a key
+    """
+    return tuple(obs)
+
+
+def get_obs(game: TicTacToeView):
+    def tile_to_num(tile: str):
+        if tile == EMPTY:
+            return 0
+        if tile == game.player1.shape:
+            return 1
+        if tile == game.player2.shape:
+            return 2
+
+    obs = []
+    for row in game.grid:
+        for tile in row:
+            obs.append(tile_to_num(tile))
+    return obs
 
 
 @app_commands.command(
@@ -310,6 +305,9 @@ async def game_tic_tac_toe(
 
 
 async def setup(loobibot: LoobiBot):
+    with open(in_folder("qtable_tic_tac_toe.pkl"), "rb") as file:
+        global q_table
+        q_table = pickle.load(file)
     global bot
     bot = loobibot
     loobibot.game_command.add_command(game_tic_tac_toe)
