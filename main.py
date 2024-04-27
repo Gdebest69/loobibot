@@ -231,7 +231,7 @@ class LoobiBot(commands.Bot):
                 await self.add_extensions(os.path.join(folder, file))
             elif file.endswith(".py"):
                 extension_name = (
-                    folder.replace("\\", ".")
+                    folder.replace("\\", ".").replace("/", ".")
                     + "."
                     + file[:-3]  # removing the .py extension
                 )
