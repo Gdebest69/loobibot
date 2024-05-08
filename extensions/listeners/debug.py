@@ -1,5 +1,5 @@
 import aiohttp
-import socket
+from wakeonlan import send_magic_packet
 from main import *
 
 
@@ -11,19 +11,14 @@ class DebugCommands(commands.Cog):
         # WOL
         self.mac_address = "08:bf:b8:31:41:1e"
         self.ip_address = "10.100.102.27"
+        self.devices = {
+            "my_pc": {"mac": self.mac_address, "ip_address": self.ip_address}
+        }
 
-    def wake_on_lan(self):
-        # Create a socket object
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-
-        # Construct the magic packet
-        mac_bytes = bytes.fromhex(self.mac_address.replace(":", ""))
-        magic_packet = b"\xff" * 6 + mac_bytes * 16
-
-        # Send the magic packet to the broadcast address
-        sock.sendto(magic_packet, (self.ip_address, 9))
-        sock.close()
+    def wake_device(self, device_name):
+        if device_name in self.devices:
+            mac, ip = self.devices[device_name].values()
+            send_magic_packet(mac, ip_address=ip)
 
     async def get_router_ip(self):
         async with aiohttp.ClientSession() as session:
@@ -101,7 +96,7 @@ class DebugCommands(commands.Cog):
 
             # WOL command
             if message.content == "/wol":
-                self.wake_on_lan()
+                self.wake_device("my_pc")
                 await message.reply("Successfully woke up the PC", mention_author=False)
 
 
