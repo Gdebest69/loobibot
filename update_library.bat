@@ -1,6 +1,6 @@
 cd discord.py
 git checkout merged
-git fetch
+git fetch --all
 git merge origin/master
 git merge origin/feature/user_apps
 git merge fork/soundboard_vc_effects
