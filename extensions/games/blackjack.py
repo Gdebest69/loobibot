@@ -310,14 +310,14 @@ class UpcomingGame(View):
 
     @tasks.loop(seconds=5)
     async def check_message(self):
-        print("call")
+        # print("call")
         if self.message is not None:
             try:
                 await self.message.channel.fetch_message(self.message.id)
             except:
                 self.check_message.stop()
                 await on_message_delete(self.message)
-                print("stop")
+                # print("stop")
 
 
 class BlackjackGame(View):
