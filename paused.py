@@ -56,7 +56,5 @@ async def on_message(message: discord.Message):
             mention_author=False,
         )
 
-# crazy
-
 
 bot.run(TOKEN)
