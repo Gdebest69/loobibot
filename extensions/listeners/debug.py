@@ -1,4 +1,5 @@
 import aiohttp
+import subprocess
 from wakeonlan import send_magic_packet
 from main import *
 
@@ -57,6 +58,13 @@ class DebugCommands(commands.Cog):
                     "Updating bot...", mention_author=False
                 )
                 self.bot.save_data()
+                try:
+                    subprocess.run(["git", "pull"])
+                except Exception as e:
+                    await message.channel.send(
+                        f"Error occurred while executing git pull: {e}"
+                    )
+                    raise e
                 os.execl(
                     sys.executable,
                     sys.executable,

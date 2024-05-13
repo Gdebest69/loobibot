@@ -1,7 +1,7 @@
 import discord
 import sys
 import os
-import time
+import subprocess
 import datetime
 from settings import *
 
@@ -37,6 +37,11 @@ async def on_ready():
 async def on_message(message: discord.Message):
     if message.author.id == OWNER_ID and message.content == "/resume":
         resumed_message = await message.reply("Resuming bot...", mention_author=False)
+        try:
+            subprocess.run(["git", "pull"])
+        except Exception as e:
+            await message.channel.send(f"Error occurred while executing git pull: {e}")
+            raise e
         os.execl(
             sys.executable,
             sys.executable,
