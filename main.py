@@ -34,7 +34,10 @@ class GuildData:
         disabled_commands: list[str] = None,
         disabled_channels: list[int] = None,
         game_status_channels_id: list[int] = None,
+        n_words: dict[int, int] = None,
     ):
+        if n_words is None:
+            n_words = {}
         if game_status_channels_id is None:
             game_status_channels_id = []
         if disabled_channels is None:
@@ -67,6 +70,7 @@ class GuildData:
         self.disabled_commands = disabled_commands
         self.disabled_channels = disabled_channels
         self.game_status_channels_id = game_status_channels_id
+        self.n_words = n_words
 
     def update(self):
         pass
