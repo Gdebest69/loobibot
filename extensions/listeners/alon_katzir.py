@@ -130,6 +130,7 @@ class WeDoSomeLols(commands.Cog):
         name="n-leaderboard",
         description="See who said the n-word the most amount of times",
     )
+    @app_commands.describe(page="The leaderboard page number")
     async def n_leaderboard_command(
         self, interaction: discord.Interaction, page: int = 1
     ):
