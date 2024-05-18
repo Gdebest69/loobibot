@@ -99,8 +99,8 @@ class DebugCommands(commands.Cog):
                 ip = await self.get_router_ip()
                 if ip is None:
                     await message.reply("There was an error", mention_author=False)
-                else:
-                    await message.reply(ip, mention_author=False)
+                    return
+                await message.reply(ip, mention_author=False)
 
             # WOL command
             if message.content == "/wol":
