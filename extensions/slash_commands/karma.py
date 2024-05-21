@@ -43,11 +43,11 @@ class KarmaListView(View):
         end_index = start_index + MAX_VALUES_PER_PAGE
         member_list = []
         amount_list = []
-        top_karma = sorted(
-            self.bot.get_guild_data(interaction.guild_id).karma.items(),
-            reverse=True,
-            key=lambda item: item[1],
-        )[start_index:end_index]
+        karma = sort_dict_by_value(
+            self.bot.get_guild_data(interaction.guild_id).karma, reverese=True
+        )
+        top_karma = list(karma.items())[start_index:end_index]
+        self.bot.get_guild_data(interaction.guild_id).karma = karma
         for i in range(len(top_karma)):
             member_list.append(
                 f"`#{i + start_index + 1}` {mention_user(top_karma[i][0])}"

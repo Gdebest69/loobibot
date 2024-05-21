@@ -137,11 +137,8 @@ def mention_user(user_id: int):
     return f"<@{user_id}>"
 
 
-def sort_dict(d: dict, reverese: bool = False):
-    keys = list(d.keys())
-    keys.sort(reverse=reverese)
-    sorted_dict = {i: d[i] for i in keys}
-    return sorted_dict
+def sort_dict_by_value(d: dict, reverese: bool = False):
+    return dict(sorted(d.items(), key=lambda item: item[1], reverse=reverese))
 
 
 def is_in_dm(obj: discord.Message | discord.Interaction):

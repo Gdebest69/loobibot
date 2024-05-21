@@ -43,11 +43,11 @@ class NWordListView(View):
         end_index = start_index + MAX_VALUES_PER_PAGE
         member_list = []
         amount_list = []
-        top_n_word = sorted(
-            self.bot.get_guild_data(interaction.guild_id).n_words.items(),
-            reverse=True,
-            key=lambda item: item[1],
-        )[start_index:end_index]
+        n_words = sort_dict_by_value(
+            self.bot.get_guild_data(interaction.guild_id).n_words, reverese=True
+        )
+        top_n_word = list(n_words.items())[start_index:end_index]
+        self.bot.get_guild_data(interaction.guild_id).n_words = n_words
         for i in range(len(top_n_word)):
             member_list.append(
                 f"`#{i + start_index + 1}` {mention_user(top_n_word[i][0])}"
