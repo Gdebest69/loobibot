@@ -122,10 +122,6 @@ async def send_invalid_permission(
     )
 
 
-def print_rgb_message(text, r, g, b):
-    print(f"\033[38;2;{r};{g};{b}m{text}\033")
-
-
 async def get_user(bot: discord.Client, user_id: int):
     user = bot.get_user(user_id)
     if user is None:
