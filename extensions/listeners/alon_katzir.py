@@ -98,6 +98,7 @@ class WeDoSomeLols(commands.Cog):
             "niga",
             "ניגר",
             "ניגה",
+            "כושי",
             "niggers",
             "nigers",
         ]
