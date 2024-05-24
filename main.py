@@ -126,7 +126,7 @@ class LoobiBot(commands.Bot):
                 self.__guilds_data = data["guilds"]
                 self.__users_data = data["users"]
                 self.vacation = data["vacation"]
-                self.server_list_message_id = data.get("server_list_message_id", 0)
+                self.server_list_message = data.get("server_list_message", (0, 0))
         except Exception as e:
             if not isinstance(e, FileNotFoundError):
                 with open(in_folder("data.lb"), "rb") as reader_file:
@@ -136,7 +136,7 @@ class LoobiBot(commands.Bot):
             self.__guilds_data = {}
             self.__users_data = {}
             self.vacation = False
-            self.server_list_message_id = 0
+            self.server_list_message = (0, 0)
 
     def save_data(self):
         with open(in_folder("data.lb"), "wb") as file:
@@ -145,7 +145,7 @@ class LoobiBot(commands.Bot):
                     "guilds": self.__guilds_data,
                     "users": self.__users_data,
                     "vacation": self.vacation,
-                    "server_list_message_id": self.server_list_message_id,
+                    "server_list_message": self.server_list_message,
                 },
                 file,
             )
