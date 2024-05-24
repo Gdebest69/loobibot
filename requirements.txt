@@ -2,3 +2,4 @@ PyNaCl
 mcstatus
 wakeonlan
 crafty-client
+urllib3
