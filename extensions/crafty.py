@@ -2,7 +2,7 @@ import urllib3
 import asyncio
 import base64
 import io
-from crafty_client import Crafty4
+from crafty_client import Crafty4, static
 from discord.ext import tasks
 from main import *
 
@@ -111,6 +111,21 @@ class Crafty(commands.Cog):
 
         return (embeds, attachments) if embeds else ([default_embed], [])
 
+    async def server_list_autocomplete(
+        self,
+        interaction: discord.Interaction,
+        current: str,
+    ):
+
+        servers = await asyncio.to_thread(self.crafty.list_mc_servers)
+        choices = [
+            app_commands.Choice(name=server["server_name"], value=server["server_id"])
+            for server in servers
+            if current.lower() in server["server_name"].lower()
+            and server["type"] == "minecraft-java"
+        ]
+        return choices if len(choices) <= 25 else []
+
     @app_commands.command(
         name="server-list",
         description="Send a new message in this channel which will show all the servers hosted in crafty controller",
@@ -146,6 +161,33 @@ class Crafty(commands.Cog):
                     + f" if this problem continues, please report it to {mention_user(OWNER_ID)}",
                 )
                 raise e
+
+    @app_commands.command(
+        name="whitelist",
+        description="Add any player to a whitelist in any of the servers hosted in crafty controller",
+    )
+    @app_commands.autocomplete(server=server_list_autocomplete)
+    @app_commands.describe(
+        server="The server to add the player to", username="The Minecraft username"
+    )
+    async def whitelist_command(
+        self, interaction: discord.Interaction, server: str, username: str
+    ):
+        try:
+            r = await asyncio.to_thread(
+                self.crafty.run_command, server, f"whitelist add {username}"
+            )
+            if r is None:
+                await interaction.response.send_message(
+                    "Server is offline", ephemeral=True
+                )
+                return
+            if not r:  # r = {} which means it worked
+                await interaction.response.send_message(
+                    "Successfully sent whitelist command", ephemeral=True
+                )
+        except static.exceptions.AccessDenied:
+            await interaction.response.send_message("Server not found", ephemeral=True)
 
     @tasks.loop(hours=1)
     async def update_server_list(self):
