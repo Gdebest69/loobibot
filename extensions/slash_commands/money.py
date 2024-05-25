@@ -41,7 +41,7 @@ class MoneyCommand(
     ):
         if isinstance(error, app_commands.CommandOnCooldown):
             await interaction.response.send_message(
-                f"You are in cooldown until {self.format_timedelta(error.retry_after)}",
+                f"You can you this again in {time_remaining(error.retry_after)}",
                 ephemeral=True,
             )
         else:

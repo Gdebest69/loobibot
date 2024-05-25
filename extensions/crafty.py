@@ -40,7 +40,7 @@ class ServerListView(discord.ui.View):
     ):
         if isinstance(error, ButtonOnCooldown):
             await interaction.response.send_message(
-                f"This command is in cooldown until {self.format_timedelta(error.retry_after)}",
+                f"You can use this again in {time_remaining(error.retry_after)}",
                 ephemeral=True,
             )
         else:

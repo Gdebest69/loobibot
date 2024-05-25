@@ -209,6 +209,32 @@ async def get_router_ip():
                 return None
 
 
+def time_remaining(seconds: float):
+    second = 1
+    minute = second * 60
+    hour = minute * 60
+    day = hour * 24
+    year = day * 365
+    if seconds >= year:
+        value = seconds // year
+        t = "year"
+    elif seconds >= day:
+        value = seconds // day
+        t = "day"
+    elif seconds >= hour:
+        value = seconds // hour
+        t = "hour"
+    elif seconds >= minute:
+        value = seconds // minute
+        t = "minute"
+    else:
+        value = int(seconds)
+        t = "second"
+    if value != 1:
+        t += "s"
+    return f"{value} {t}"
+
+
 class JMusicBot:
     def __init__(self, path: str):
         self.path = path
