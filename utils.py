@@ -228,11 +228,11 @@ def time_remaining(seconds: float):
         value = seconds // minute
         t = "minute"
     else:
-        value = int(seconds)
+        value = seconds
         t = "second"
     if value != 1:
         t += "s"
-    return f"{value} {t}"
+    return f"{int(value)} {t}"
 
 
 class JMusicBot:
