@@ -1,4 +1,3 @@
-import aiohttp
 import subprocess
 from wakeonlan import send_magic_packet
 from main import *
@@ -7,8 +6,6 @@ from main import *
 class DebugCommands(commands.Cog):
     def __init__(self, bot: LoobiBot):
         self.bot = bot
-        # public ip
-        self.ipify_url = "http://api.ipify.org"
         # WOL
         self.mac_address = "08:bf:b8:31:41:1e"
         self.ip_address = "10.100.102.27"
@@ -20,14 +17,6 @@ class DebugCommands(commands.Cog):
         if device_name in self.devices:
             mac, ip = self.devices[device_name].values()
             send_magic_packet(mac, ip_address=ip)
-
-    async def get_router_ip(self):
-        async with aiohttp.ClientSession() as session:
-            async with session.get(self.ipify_url) as response:
-                if response.status == 200:
-                    return await response.text()
-                else:
-                    return None
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
@@ -96,11 +85,11 @@ class DebugCommands(commands.Cog):
 
             # ip command
             if message.content == "/ip":
-                ip = await self.get_router_ip()
+                ip = await get_router_ip()
                 if ip is None:
                     await message.reply("There was an error", mention_author=False)
-                else:
-                    await message.reply(ip, mention_author=False)
+                    return
+                await message.reply(ip, mention_author=False)
 
             # WOL command
             if message.content == "/wol":

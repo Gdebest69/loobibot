@@ -5,6 +5,7 @@ import datetime
 import settings
 import json
 import re
+import aiohttp
 from discord import app_commands
 
 
@@ -122,10 +123,6 @@ async def send_invalid_permission(
     )
 
 
-def print_rgb_message(text, r, g, b):
-    print(f"\033[38;2;{r};{g};{b}m{text}\033")
-
-
 async def get_user(bot: discord.Client, user_id: int):
     user = bot.get_user(user_id)
     if user is None:
@@ -200,6 +197,42 @@ def is_guild_installed(
     else:
         base_command = command
     return base_command.allowed_installs is None or base_command.allowed_installs.guild
+
+
+async def get_router_ip():
+    ipify_url = "http://api.ipify.org"
+    async with aiohttp.ClientSession() as session:
+        async with session.get(ipify_url) as response:
+            if response.status == 200:
+                return await response.text()
+            else:
+                return None
+
+
+def time_remaining(seconds: float):
+    second = 1
+    minute = second * 60
+    hour = minute * 60
+    day = hour * 24
+    year = day * 365
+    if seconds >= year:
+        value = seconds // year
+        t = "year"
+    elif seconds >= day:
+        value = seconds // day
+        t = "day"
+    elif seconds >= hour:
+        value = seconds // hour
+        t = "hour"
+    elif seconds >= minute:
+        value = seconds // minute
+        t = "minute"
+    else:
+        value = seconds
+        t = "second"
+    if value != 1:
+        t += "s"
+    return f"{int(value)} {t}"
 
 
 class JMusicBot:
