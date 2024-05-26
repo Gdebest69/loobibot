@@ -62,6 +62,16 @@ class Crafty(commands.Cog):
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
         self.update_server_list.start()
 
+    def is_valid_minecraft_username(self, username: str):
+        # Regular expression to match the allowed characters (letters, numbers, underscore)
+        pattern = re.compile(r"^[A-Za-z0-9_]+$")
+
+        # Check if the username matches the pattern
+        if not pattern.match(username):
+            return False
+
+        return True
+
     async def servers_list_embeds(self):
         servers = await asyncio.to_thread(self.crafty.list_mc_servers)
         ip = await get_router_ip()
@@ -178,6 +188,11 @@ class Crafty(commands.Cog):
     async def whitelist_command(
         self, interaction: discord.Interaction, server: str, username: str
     ):
+        # check username
+        if not self.is_valid_minecraft_username(username):
+            await interaction.response.send_message("Invalid username", ephemeral=True)
+            return
+
         try:
             r = await asyncio.to_thread(
                 self.crafty.run_command, server, f"whitelist add {username}"
