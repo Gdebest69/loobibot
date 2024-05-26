@@ -85,28 +85,29 @@ class Crafty(commands.Cog):
                 )
                 embed.set_author(name=server_stats["server_id"]["type"])
                 embed.set_footer(text=server_stats["version"])
-                if (
-                    server_stats["icon"] != ""
-                    and server_stats["icon"] != "False"
-                    and server_stats["icon"] is not None
-                ):
-                    decoded_image = base64.b64decode(server_stats["icon"])
-                    icon_file = discord.File(
-                        io.BytesIO(decoded_image),
-                        f"{i}.png",
-                    )
-                    embed.set_thumbnail(url=f"attachment://{i}.png")
-                    attachments.append(icon_file)
-                else:
-                    embed.set_thumbnail(url="attachment://default_server_icon.png")
-                    if default_server_icon is None:
-                        default_server_icon = discord.File(
-                            in_folder(
-                                os.path.join("assets", "default_server_icon.png")
-                            ),
-                            "default_server_icon.png",
+                if server_stats["server_id"]["type"] == "minecraft-java":
+                    if (
+                        server_stats["icon"] != ""
+                        and server_stats["icon"] != "False"
+                        and server_stats["icon"] is not None
+                    ):
+                        decoded_image = base64.b64decode(server_stats["icon"])
+                        icon_file = discord.File(
+                            io.BytesIO(decoded_image),
+                            f"{i}.png",
                         )
-                        attachments.append(default_server_icon)
+                        embed.set_thumbnail(url=f"attachment://{i}.png")
+                        attachments.append(icon_file)
+                    else:
+                        embed.set_thumbnail(url="attachment://default_server_icon.png")
+                        if default_server_icon is None:
+                            default_server_icon = discord.File(
+                                in_folder(
+                                    os.path.join("assets", "default_server_icon.png")
+                                ),
+                                "default_server_icon.png",
+                            )
+                            attachments.append(default_server_icon)
                 embeds.append(embed)
 
         return (embeds, attachments) if embeds else ([default_embed], [])
@@ -116,13 +117,17 @@ class Crafty(commands.Cog):
         interaction: discord.Interaction,
         current: str,
     ):
-
         servers = await asyncio.to_thread(self.crafty.list_mc_servers)
         choices = [
             app_commands.Choice(name=server["server_name"], value=server["server_id"])
             for server in servers
             if current.lower() in server["server_name"].lower()
             and server["type"] == "minecraft-java"
+            and (
+                await asyncio.to_thread(
+                    self.crafty.get_server_stats, server["server_id"]
+                )
+            )["running"]
         ]
         return choices if len(choices) <= 25 else []
 
