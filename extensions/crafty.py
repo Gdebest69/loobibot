@@ -57,10 +57,13 @@ class ServerListView(discord.ui.View):
 class Crafty(commands.Cog):
     def __init__(self, bot: LoobiBot):
         self.bot = bot
-        self.crafty = Crafty4(CRAFTY_URL, CRAFTY_TOKEN)
-        self.offline_color = 0xFF0000
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+        self.crafty = Crafty4(CRAFTY_URL, CRAFTY_TOKEN)
+        self.online_color = 0x00FF00
+        self.offline_color = 0xFF0000
+        self.online_servers: list[app_commands.Choice] = []
         self.update_server_list.start()
+        self.update_online_servers.start()
 
     def is_valid_minecraft_username(self, username: str):
         # Regular expression to match the allowed characters (letters, numbers, underscore)
@@ -91,7 +94,7 @@ class Crafty(commands.Cog):
                 embed = discord.Embed(
                     title=server_stats["server_id"]["server_name"],
                     description=f"{ip}:{server_stats['server_id']['server_port']}",
-                    color=EMBED_COLOR,
+                    color=self.online_color,
                 )
                 embed.set_author(name=server_stats["server_id"]["type"])
                 embed.set_footer(text=server_stats["version"])
@@ -127,17 +130,10 @@ class Crafty(commands.Cog):
         interaction: discord.Interaction,
         current: str,
     ):
-        servers = await asyncio.to_thread(self.crafty.list_mc_servers)
         choices = [
-            app_commands.Choice(name=server["server_name"], value=server["server_id"])
-            for server in servers
-            if current.lower() in server["server_name"].lower()
-            and server["type"] == "minecraft-java"
-            and (
-                await asyncio.to_thread(
-                    self.crafty.get_server_stats, server["server_id"]
-                )
-            )["running"]
+            choice
+            for choice in self.online_servers
+            if current.lower() in choice.name.lower()
         ]
         return choices if len(choices) <= 25 else []
 
@@ -219,6 +215,20 @@ class Crafty(commands.Cog):
         if message is not None:
             embeds, attachments = await self.servers_list_embeds()
             await message.edit(embeds=embeds, attachments=attachments)
+
+    @tasks.loop(minutes=1)
+    async def update_online_servers(self):
+        servers = await asyncio.to_thread(self.crafty.list_mc_servers)
+        self.online_servers = [
+            app_commands.Choice(name=server["server_name"], value=server["server_id"])
+            for server in servers
+            if server["type"] == "minecraft-java"
+            and (
+                await asyncio.to_thread(
+                    self.crafty.get_server_stats, server["server_id"]
+                )
+            )["running"]
+        ]
 
 
 async def update_view(cog: Crafty):
