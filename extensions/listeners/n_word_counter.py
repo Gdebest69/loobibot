@@ -106,17 +106,17 @@ class NWordCounter(commands.Cog):
     async def on_message(self, message: discord.Message):
         # check for n-word
         if is_in_guild(message) and not message.author.bot:
-            content = message.content
+            splitted_content = message.content.split()
+            counter = 0
             for n_word in self.n_words:
-                if (
-                    content.startswith(n_word)
-                    or content.endswith(n_word)
-                    or f" {n_word} " in content
-                ):
-                    n_words = self.bot.get_guild_data(message.guild.id).n_words
-                    if not message.author.id in n_words:
-                        n_words[message.author.id] = 0
-                    n_words[message.author.id] += 1
+                for word in splitted_content:
+                    if word == n_word:
+                        counter += 1
+            if counter > 0:
+                n_words = self.bot.get_guild_data(message.guild.id).n_words
+                if not message.author.id in n_words:
+                    n_words[message.author.id] = 0
+                n_words[message.author.id] += counter
 
     @app_commands.command(
         name="n-leaderboard",
