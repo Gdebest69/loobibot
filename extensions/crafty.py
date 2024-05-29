@@ -20,11 +20,6 @@ class ServerListView(discord.ui.View):
             1, 60, lambda i: 1
         )
 
-    def format_timedelta(self, total_seconds: float):
-        now = datetime.datetime.now()
-        cooldown_time = now + datetime.timedelta(seconds=total_seconds)
-        return discord.utils.format_dt(cooldown_time, "R")
-
     async def interaction_check(self, interaction: discord.Interaction):
         retry_after = self.cd.update_rate_limit(interaction)
         if retry_after:

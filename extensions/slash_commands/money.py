@@ -13,11 +13,6 @@ class MoneyCommand(
         )
         self.bot.tree.add_command(self.get_money_ctx_menu)
 
-    def format_timedelta(self, total_seconds: float):
-        now = datetime.datetime.now()
-        cooldown_time = now + datetime.timedelta(seconds=total_seconds)
-        return discord.utils.format_dt(cooldown_time, "R")
-
     @app_commands.command(name="claim", description="Claim 100$ every 24 hours")
     @app_commands.checks.cooldown(
         1,
