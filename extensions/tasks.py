@@ -46,8 +46,8 @@ class Tasks(commands.Cog):
             else:
                 self.rgb_effect.start()
 
-        if not self.exercise_reminder.is_running():
-            self.exercise_reminder.start()
+        """if not self.exercise_reminder.is_running():
+            self.exercise_reminder.start()"""
 
         self.rgb = False
 
