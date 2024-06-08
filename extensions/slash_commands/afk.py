@@ -32,10 +32,10 @@ class AfkCommand(commands.Cog):
                 content=f"Successfully connected to {channel.name}"
             )
         except Exception as e:
-            print(e)
             await interaction.edit_original_response(
                 content=f"There was a problem trying to connect to {channel.name}"
             )
+            raise e
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member, before, after):

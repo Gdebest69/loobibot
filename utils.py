@@ -13,21 +13,21 @@ def time_prefix():
     return f"[{datetime.datetime.now().isoformat(sep=' ', timespec='seconds')}]"
 
 
-def print_command(interaction: discord.Interaction):
+def print_command(interaction: discord.Interaction, logger):
     # print(interaction.data)
     """for key, value in interaction.namespace:
     print(key, value, sep=": ")"""
 
     if is_in_dm(interaction):
-        prefix = f"{time_prefix()} [Direct message] {interaction.user}"
+        prefix = f"[Direct message] {interaction.user}"
     elif is_in_gc(interaction):
-        prefix = f"{time_prefix()} [{interaction.channel}] {interaction.user}"
+        prefix = f"[{interaction.channel}] {interaction.user}"
     else:
         if isinstance(interaction.channel, discord.Thread):
             channel_prefix = f"{interaction.channel.parent} -> {interaction.channel}"
         else:
             channel_prefix = interaction.channel
-        prefix = f"{time_prefix()} [{interaction.guild}: {channel_prefix}] {interaction.user}"
+        prefix = f"[{interaction.guild}: {channel_prefix}] {interaction.user}"
 
     if isinstance(interaction.command, app_commands.Command):
         command = (
@@ -35,7 +35,7 @@ def print_command(interaction: discord.Interaction):
             + " "
             + " ".join([str(parm[1]) for parm in interaction.namespace])
         )
-        print(f"{prefix}: /{command}")
+        logger.info(f"{prefix}: /{command}")
 
     elif isinstance(interaction.command, app_commands.ContextMenu):
 
@@ -62,19 +62,19 @@ def print_command(interaction: discord.Interaction):
 
         target, target_type = get_target(interaction)
         if target_type == discord.Message:
-            print(
+            logger.info(
                 f"{prefix} used {interaction.command.name} on the following message: {target}"
             )
         elif target_type == discord.User:
-            print(f"{prefix} used {interaction.command.name} on {target}")
+            logger.info(f"{prefix} used {interaction.command.name} on {target}")
 
 
-def print_message(message: discord.Message):
+def print_message(message: discord.Message, logger):
     if is_in_dm(message):
-        prefix = f"{time_prefix()} [Direct message] {message.author.name}"
+        prefix = f"[Direct message] {message.author.name}"
     else:
-        prefix = f"{time_prefix()} [{message.guild.name}: {message.channel.name}] {message.author.name}"
-    print(f"{prefix}: {message.content}")
+        prefix = f"[{message.guild.name}: {message.channel.name}] {message.author.name}"
+    logger.info(f"{prefix}: {message.content}")
 
 
 def is_connected(bot: discord.Client, channel: discord.VoiceChannel):

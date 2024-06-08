@@ -167,7 +167,7 @@ class KarmaCommand(
             if "karma" in self.bot.get_guild_data(message.guild.id).disabled_commands:
                 return
 
-            print_message(message)
+            print_message(message, self.bot.logger)
             guild_data = self.bot.get_guild_data(message.guild.id)
             karma_amount = guild_data.default_karma_amount
             for role_id in guild_data.karma_points:

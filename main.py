@@ -94,6 +94,7 @@ class LoobiBot(commands.Bot):
         intents.members = True
         intents.presences = True
         intents.message_content = True
+        self.logger = logging.getLogger("loobibot")
         super().__init__(
             intents=intents,
             command_prefix="/",
@@ -132,7 +133,8 @@ class LoobiBot(commands.Bot):
                 with open(in_folder("data.lb"), "rb") as reader_file:
                     with open(in_folder("data_backup.lb"), "wb") as writer_file:
                         writer_file.write(reader_file.read())
-            print(e, "Using empty data", sep="\n")
+            self.logger.warning(e)
+            self.logger.warning("Using empty data")
             self.__guilds_data = {}
             self.__users_data = {}
             self.vacation = False
@@ -184,7 +186,7 @@ class LoobiBot(commands.Bot):
         if interaction.type == discord.InteractionType.autocomplete:
             return True
         # printing the command to the console
-        print_command(interaction)
+        print_command(interaction, self.logger)
         # update user data if missing
         if self.get_user_data(interaction.user.id) is None:
             self.set_user_data(interaction.user.id, UserData())
@@ -251,7 +253,7 @@ class LoobiBot(commands.Bot):
         await self.wait_until_ready()
 
         if not self.synced:
-            print(f"{time_prefix()} Adding extensions")
+            self.logger.info("Adding extensions")
             await self.add_extensions("extensions")
 
             if len(sys.argv) == 3:
@@ -260,13 +262,16 @@ class LoobiBot(commands.Bot):
                     message = await resumed_channel.fetch_message(int(sys.argv[2]))
                     await message.edit(content="Successfully resumed the bot")
                 except Exception as e:
-                    print(e)
+                    self.logger.warning(e)
 
             self.synced = True
 
-        print(f"{time_prefix()} {self.user} is ready")
+        self.logger.info(f"{self.user} is ready")
 
 
 if __name__ == "__main__":
+    import logging
+
+    discord.utils.setup_logging()
     bot = LoobiBot()
-    bot.run(TOKEN)
+    bot.run(TOKEN, log_handler=None)

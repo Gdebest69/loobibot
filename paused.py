@@ -25,12 +25,9 @@ def get_last_updated_time(folder_path):
 
 @bot.event
 async def on_ready():
-    try:
-        channel = bot.get_channel(int(sys.argv[1]))
-        message = await channel.fetch_message(int(sys.argv[2]))
-        await message.edit(content="Successfully paused the bot")
-    except Exception as e:
-        print(e)
+    channel = bot.get_channel(int(sys.argv[1]))
+    message = await channel.fetch_message(int(sys.argv[2]))
+    await message.edit(content="Successfully paused the bot")
 
 
 @bot.event

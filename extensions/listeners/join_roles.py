@@ -7,7 +7,7 @@ class JoinRoles(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_remove(self, member: discord.Member):
-        print(f"{time_prefix()} {member.name} left {member.guild.name}")
+        self.bot.logger.info(f"{member.name} left {member.guild.name}")
 
         # save roles
         roles_id_list = []
@@ -18,7 +18,7 @@ class JoinRoles(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
-        print(f"{time_prefix()} {member.name} joined {member.guild.name}")
+        self.bot.logger.info(f"{member.name} joined {member.guild.name}")
 
         # add saved roles
         guild = member.guild

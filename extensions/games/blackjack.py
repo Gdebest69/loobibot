@@ -813,7 +813,7 @@ async def setup(loobibot: LoobiBot):
                 emoji = await emojis_guild.create_custom_emoji(
                     name=card_name, image=image.read()
                 )
-                print(f"Created {emoji.name} emoji")
+                loobibot.logger.info(f"Created {emoji.name} emoji")
         emoji_list.append(emoji)
 
     global all_crads
