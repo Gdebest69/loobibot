@@ -204,7 +204,10 @@ class Crafty(commands.Cog):
     async def update_server_list(self):
         channel_id, message_id = self.bot.server_list_message
         try:
-            message = await self.bot.get_channel(channel_id).fetch_message(message_id)
+            channel = self.bot.get_channel(channel_id)
+            message = (
+                await channel.fetch_message(message_id) if channel is not None else None
+            )
         except discord.NotFound:
             message = None
         if message is not None:
@@ -229,7 +232,10 @@ class Crafty(commands.Cog):
 async def update_view(cog: Crafty):
     channel_id, message_id = cog.bot.server_list_message
     try:
-        message = await cog.bot.get_channel(channel_id).fetch_message(message_id)
+        channel = cog.bot.get_channel(channel_id)
+        message = (
+            await channel.fetch_message(message_id) if channel is not None else None
+        )
     except discord.NotFound:
         message = None
     if message is not None:
