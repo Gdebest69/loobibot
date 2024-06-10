@@ -806,7 +806,7 @@ class SettingsCommand(
         name="game-status-channels",
         description="Automatically update voice channel status based on members' game activity",
     )
-    async def settings_disabled_channels(self, interaction: discord.Interaction):
+    async def settings_game_status_channels(self, interaction: discord.Interaction):
         # channel check
         if is_in_dm(interaction):
             await must_use_in_guild(interaction)
