@@ -88,6 +88,7 @@ class PrivateChannelCommand(
                 await interaction.edit_original_response(
                     content=f"Invalid channel type: {channel_type.value}"
                 )
+                private_channels[interaction.user.id] = -1
                 return
             private_channels[interaction.user.id] = channel.id
             await interaction.edit_original_response(
