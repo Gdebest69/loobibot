@@ -9,10 +9,6 @@ class PrivateChannelCommand(
 ):
     def __init__(self, bot: LoobiBot):
         self.bot = bot
-        self.view_private_channel_ctx_menu = app_commands.ContextMenu(
-            name="View private channel", callback=self.view_private_channel
-        )
-        self.bot.tree.add_command(self.view_private_channel_ctx_menu)
 
     @app_commands.command(name="create", description="Create a private channel")
     @app_commands.choices(
@@ -198,6 +194,7 @@ class PrivateChannelCommand(
     @app_commands.command(
         name="list", description="A list of all the private channels and their owners"
     )
+    @app_commands.default_permissions()
     async def channel_list(self, interaction: discord.Interaction):
         # channel check
         if is_in_dm(interaction):
@@ -225,30 +222,6 @@ class PrivateChannelCommand(
         embed.add_field(name="Members", value=members_str, inline=True)
         embed.add_field(name="Channels", value=channels_str, inline=True)
         await interaction.response.send_message(embed=embed)
-
-    @app_commands.guild_only()
-    async def view_private_channel(
-        self, interaction: discord.Interaction, member: discord.Member
-    ):
-        if is_in_dm(interaction):
-            await must_use_in_guild(interaction)
-            return
-
-        private_channels = self.bot.get_guild_data(
-            interaction.guild_id
-        ).private_channels
-        if member.id in private_channels:
-            channel = self.bot.get_channel(private_channels[member.id])
-            if channel is not None:
-                await interaction.response.send_message(channel.mention, ephemeral=True)
-            else:
-                await interaction.response.send_message(
-                    f"{member.mention} doesn't have a private channel", ephemeral=True
-                )
-        else:
-            await interaction.response.send_message(
-                f"{member.mention} doesn't have a private channel", ephemeral=True
-            )
 
 
 async def setup(bot: LoobiBot):
