@@ -89,7 +89,8 @@ class DebugCommands(commands.Cog):
                 if ip is None:
                     await message.reply("There was an error", mention_author=False)
                     return
-                await message.reply(ip, mention_author=False)
+                dashboard = f"https://{ip}:8111/panel/dashboard"
+                await message.reply(f"{ip}\n{dashboard}", mention_author=False)
 
             # WOL command
             if message.content == "/wol":
