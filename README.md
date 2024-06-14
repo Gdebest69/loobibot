@@ -28,7 +28,7 @@ folder inside the root directory. To check if it worked:
 * merged
 ```
 - Go back to the root directory: `cd ..`
-2. Tp update the branch run:
+2. To update the branch run:
 ```
 cd discord.py
 git pull
