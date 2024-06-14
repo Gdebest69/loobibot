@@ -28,8 +28,12 @@ folder inside the root directory. To check if it worked:
 * merged
 ```
 - Go back to the root directory: `cd ..`
-2. (Optional) update the branch: `./update_library.bat`. It should merge successfully any new updates from the branches that I use in my repository without any conflicts. If there are conflicts you can try to resolve them manually if you feel like `him`, or just skip this step.
-- You can verify that the merge update was successful if you run `./update_library.bat` and the output of all the merge commands are ```Already up to date.```
+2. Tp update the branch run:
+```
+cd discord.py
+git pull
+cd ..
+```
 3. Uninstall old versions of discord.py, if they exist.
 - Run `pip list` and see if there are any packages listed named discord or discord.py.
 - Uninstall the packages using `pip uninstall <package name>`. Example: `pip uninstall discord`
