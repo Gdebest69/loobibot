@@ -195,11 +195,18 @@ class PrivateChannelCommand(
     @app_commands.command(
         name="list", description="A list of all the private channels and their owners"
     )
-    @app_commands.default_permissions()
     async def channel_list(self, interaction: discord.Interaction):
         # channel check
         if is_in_dm(interaction):
             await must_use_in_guild(interaction)
+            return
+
+        # permission check
+        if not interaction.user.guild_permissions.administrator:
+            await interaction.response.send_message(
+                "You must have administrator permissions to use this command",
+                ephemeral=True,
+            )
             return
 
         private_channels = self.bot.get_guild_data(
