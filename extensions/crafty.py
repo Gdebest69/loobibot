@@ -200,7 +200,7 @@ class Crafty(commands.Cog):
         except static.exceptions.AccessDenied:
             await interaction.response.send_message("Server not found", ephemeral=True)
 
-    @tasks.loop(hours=1)
+    @tasks.loop(hours=1, reconnect=True)
     async def update_server_list(self):
         channel_id, message_id = self.bot.server_list_message
         try:
@@ -214,7 +214,7 @@ class Crafty(commands.Cog):
             embeds, attachments = await self.servers_list_embeds()
             await message.edit(embeds=embeds, attachments=attachments)
 
-    @tasks.loop(minutes=1)
+    @tasks.loop(minutes=1, reconnect=True)
     async def update_online_servers(self):
         servers = await asyncio.to_thread(self.crafty.list_mc_servers)
         self.online_servers = [
