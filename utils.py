@@ -114,7 +114,7 @@ async def send_invalid_permission(
     ]
     message = " ".join(roles) if roles else str(None)
     embed = discord.Embed(
-        description=message, color=settings.EMBED_COLOR, title="Required Roles:"
+        description=message, color=settings.EMBED_COLOR, title="Required roles:"
     )
     await interaction.response.send_message(
         content="You don't have permission to use this command",
