@@ -7,8 +7,8 @@ class DebugCommands(commands.Cog):
     def __init__(self, bot: LoobiBot):
         self.bot = bot
         # WOL
-        self.mac_address = "08:bf:b8:31:41:1e"
-        self.ip_address = "10.100.102.27"
+        self.mac_address = "40:23:43:44:3f:6f"
+        self.ip_address = "10.100.102.15"
         self.devices = {
             "my_pc": {"mac": self.mac_address, "ip_address": self.ip_address}
         }
