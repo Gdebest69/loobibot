@@ -90,7 +90,10 @@ class DebugCommands(commands.Cog):
                     await message.reply("There was an error", mention_author=False)
                     return
                 dashboard = f"https://{ip}:8111/panel/dashboard"
-                await message.reply(f"{ip}\n{dashboard}", mention_author=False)
+                web_server = f"http://{ip}:7999/"
+                await message.reply(
+                    f"{ip}\n{dashboard}\n{web_server}", mention_author=False
+                )
 
             # WOL command
             if message.content == "/wol":
