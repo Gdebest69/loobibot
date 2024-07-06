@@ -12,7 +12,7 @@ MAX_PLAYERS = 7
 TURN_TIME = 30
 CARD_STACKS = 4
 END_GAME_SPEED = 1.5
-ICON_SIZE = 64
+ICON_SIZE = 128
 
 bot: LoobiBot = None
 back_card_top_emoji: discord.Emoji = None
@@ -592,7 +592,7 @@ class EndGameView(View):
         used_cards: list[Card],
         message: discord.Message,
     ):
-        super().__init__(timeout=None)
+        super().__init__(timeout=TIMEOUT)
         self.host = host.user
         self.cards = cards
         self.used_cards = used_cards
@@ -622,6 +622,9 @@ class EndGameView(View):
     @discord.ui.button(label="Stop", style=discord.ButtonStyle.blurple)
     async def stop_game(self, interaction: discord.Interaction, button: Button):
         await interaction.message.edit(view=None)
+
+    async def on_timeout(self) -> None:
+        await self.message.edit(view=None)
 
 
 class JoinGameModal(Modal):
