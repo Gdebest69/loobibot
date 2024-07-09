@@ -44,7 +44,7 @@ class NWordListView(View):
         member_list = []
         amount_list = []
         n_words = sort_dict_by_value(
-            self.bot.get_guild_data(interaction.guild_id).n_words, reverese=True
+            self.bot.get_guild_data(interaction.guild_id).n_words, reverse=True
         )
         top_n_word = list(n_words.items())[start_index:end_index]
         self.bot.get_guild_data(interaction.guild_id).n_words = n_words
