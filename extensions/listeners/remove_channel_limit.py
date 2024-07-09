@@ -40,12 +40,16 @@ class RemoveChannelLimit(commands.Cog):
 
     @commands.Cog.listener()
     async def on_voice_state_update(
-        self, member, before: discord.VoiceState, after: discord.VoiceState
+        self,
+        member: discord.Member,
+        before: discord.VoiceState,
+        after: discord.VoiceState,
     ):
-        if before.channel:
-            await self.handle_channel(before.channel)
-        if after.channel:
-            await self.handle_channel(after.channel)
+        if member.guild.id == ELMO_GUILD_ID:
+            if before.channel:
+                await self.handle_channel(before.channel)
+            if after.channel:
+                await self.handle_channel(after.channel)
 
 
 async def setup(bot: LoobiBot):
