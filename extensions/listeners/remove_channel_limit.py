@@ -20,17 +20,23 @@ class RemoveChannelLimit(commands.Cog):
             channel.id not in self.channel_limits
             and 0 < channel.user_limit < self.get_human_members(channel)
         ):
-            limit = channel.user_limit
-            await channel.edit(user_limit=0)
-            self.channel_limits[channel.id] = limit
+            try:
+                limit = channel.user_limit
+                await channel.edit(user_limit=0)
+                self.channel_limits[channel.id] = limit
+            except discord.Forbidden:
+                pass
 
         # check if the channel limit has returned to normal
         if (
             channel.id in self.channel_limits
             and self.get_human_members(channel) <= self.channel_limits[channel.id]
         ):
-            await channel.edit(user_limit=self.channel_limits[channel.id])
-            self.channel_limits.pop(channel.id)
+            try:
+                await channel.edit(user_limit=self.channel_limits[channel.id])
+                self.channel_limits.pop(channel.id)
+            except discord.Forbidden:
+                pass
 
     @commands.Cog.listener()
     async def on_voice_state_update(
