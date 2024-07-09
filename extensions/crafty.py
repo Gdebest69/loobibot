@@ -210,6 +210,8 @@ class Crafty(commands.Cog):
             )
         except discord.NotFound:
             message = None
+        except discord.Forbidden:
+            message = None
         if message is not None:
             embeds, attachments = await self.servers_list_embeds()
             await message.edit(embeds=embeds, attachments=attachments)
@@ -237,6 +239,8 @@ async def update_view(cog: Crafty):
             await channel.fetch_message(message_id) if channel is not None else None
         )
     except discord.NotFound:
+        message = None
+    except discord.Forbidden:
         message = None
     if message is not None:
         await message.edit(view=ServerListView(cog))
