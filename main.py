@@ -273,5 +273,6 @@ if __name__ == "__main__":
     import logging
 
     discord.utils.setup_logging()
+    logging.getLogger("discord.gateway").setLevel(logging.WARNING)
     bot = LoobiBot()
     bot.run(TOKEN, log_handler=None)
