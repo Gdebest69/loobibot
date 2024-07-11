@@ -308,7 +308,7 @@ class UpcomingGame(View):
             self.message = await interaction.original_response()
             upcoming_games[self.message.id] = self
 
-    @tasks.loop(seconds=5)
+    @tasks.loop(seconds=30)
     async def check_message(self):
         # print("call")
         if self.message is not None:

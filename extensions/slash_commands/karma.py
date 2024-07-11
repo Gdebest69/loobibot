@@ -44,7 +44,7 @@ class KarmaListView(View):
         member_list = []
         amount_list = []
         karma = sort_dict_by_value(
-            self.bot.get_guild_data(interaction.guild_id).karma, reverese=True
+            self.bot.get_guild_data(interaction.guild_id).karma, reverse=True
         )
         top_karma = list(karma.items())[start_index:end_index]
         self.bot.get_guild_data(interaction.guild_id).karma = karma

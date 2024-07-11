@@ -134,8 +134,8 @@ def mention_user(user_id: int):
     return f"<@{user_id}>"
 
 
-def sort_dict_by_value(d: dict, reverese: bool = False):
-    return dict(sorted(d.items(), key=lambda item: item[1], reverse=reverese))
+def sort_dict_by_value(d: dict, reverse: bool = False):
+    return dict(sorted(d.items(), key=lambda item: item[1], reverse=reverse))
 
 
 def is_in_dm(obj: discord.Message | discord.Interaction):
