@@ -4,6 +4,7 @@ data.lb
 /run_main.bat
 /assets
 /music_bot
+/.venv
 *.iml
 *.xml
 *.json
