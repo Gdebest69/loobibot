@@ -110,7 +110,7 @@ class NWordCounter(commands.Cog):
             counter = 0
             for n_word in self.n_words:
                 for word in splitted_content:
-                    if word == n_word:
+                    if word.lower() == n_word:
                         counter += 1
             if counter > 0:
                 n_words = self.bot.get_guild_data(message.guild.id).n_words
