@@ -16,7 +16,12 @@ class GetBannerUrlCommand(commands.Cog):
         self, interaction: discord.Interaction, user: discord.User
     ):
         fetched_user = await self.bot.fetch_user(user.id)
-        if fetched_user.banner:
+        if isinstance(user, discord.Member) and user.display_banner:
+            message = user.display_banner.url
+            if fetched_user.banner != user.display_banner:
+                message += "\n" + fetched_user.banner.url
+            await interaction.response.send_message(message, ephemeral=True)
+        elif fetched_user.banner:
             await interaction.response.send_message(
                 fetched_user.banner.url, ephemeral=True
             )
