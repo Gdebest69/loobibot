@@ -46,8 +46,7 @@ async def handle_bedrock(host: str) -> BedrockStatusResponse:
     return await BedrockServer.lookup(host, timeout=1).async_status()
 
 
-@app_commands.user_install()
-@app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+@app_commands.guild_only()
 class GetCommand(
     commands.GroupCog,
     name="get",
@@ -282,7 +281,9 @@ class GetCommand(
             "Can't find a sound with that name", ephemeral=True
         )
 
-    @app_commands.command(name="me", description="See your user/member anywhere")
+    @app_commands.command(
+        name="me", description="Silently mentions you so you can see your roles etc."
+    )
     async def get_me(self, interaction: discord.Interaction):
         await interaction.response.send_message(
             interaction.user.mention, ephemeral=True
