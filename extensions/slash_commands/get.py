@@ -129,14 +129,6 @@ class GetCommand(
             "Can't find a sound with that name", ephemeral=True
         )
 
-    @app_commands.command(
-        name="me", description="Silently mentions you so you can see your roles etc."
-    )
-    async def get_me(self, interaction: discord.Interaction):
-        await interaction.response.send_message(
-            interaction.user.mention, ephemeral=True
-        )
-
 
 async def setup(bot: LoobiBot):
     await bot.add_cog(GetCommand(bot))
