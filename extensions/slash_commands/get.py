@@ -12,26 +12,21 @@ class GetCommand(
 
     @app_commands.command(
         name="server-icon",
-        description="Get the icon for this server or group chat, if it exists",
+        description="Get the icon for this server, if it exists",
     )
     async def get_server_icon(self, interaction: discord.Interaction):
         # channel check
         if is_in_dm(interaction):
             await interaction.response.send_message(
-                "You must use this command inside a server or a group chat",
+                "You must use this command inside a server",
                 ephemeral=True,
             )
             return
 
-        icon = (
-            interaction.channel.icon
-            if is_in_gc(interaction)
-            else interaction.guild.icon
-        )
+        icon = interaction.guild.icon
         if icon is None:
-            scope = "group chat" if is_in_gc(interaction) else "server"
             await interaction.response.send_message(
-                f"This {scope} has no icon", ephemeral=True
+                f"This server has no icon", ephemeral=True
             )
         else:
             await interaction.response.send_message(icon.url, ephemeral=True)

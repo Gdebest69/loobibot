@@ -68,7 +68,7 @@ class MinecraftServerCommand(commands.Cog):
     @app_commands.rename(server_type="type")
     @app_commands.user_install()
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
-    async def get_mc_server(
+    async def minecraft_server_command(
         self, interaction: discord.Interaction, ip: str, server_type: str = "both"
     ):
         await interaction.response.defer(ephemeral=True)
