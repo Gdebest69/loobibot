@@ -5,9 +5,10 @@ data.lb
 /assets
 /music_bot
 /.venv
+/discord.py
+/.vscode
 *.iml
 *.xml
-*.json
 *.pyc
 /shelf/
 /workspace.xml
