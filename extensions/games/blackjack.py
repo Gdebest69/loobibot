@@ -13,6 +13,7 @@ TURN_TIME = 30
 CARD_STACKS = 4
 END_GAME_SPEED = 1.5
 ICON_SIZE = 128
+EMOJI_GUILD = 623564336052568065
 
 bot: LoobiBot = None
 back_card_top_emoji: discord.Emoji = None
@@ -737,6 +738,8 @@ def create_card_stack():
 def create_default_card_stack(emojis: list[discord.Emoji]):
     card_stack = []
     for emoji in emojis:
+        if emoji.name.startswith("blankback"):
+            continue
         color = emoji.name[0]
         if color in TYPES:
             value = emoji.name[1:]
@@ -804,29 +807,14 @@ async def test():
 async def setup(loobibot: LoobiBot):
     global bot
     bot = loobibot
-    # Upload emojis
-    emojis_guild = loobibot.get_guild(TEST_GUILD_ID)
-    crads_dir = in_folder(os.path.join("assets", "cards"))
-    emoji_list = []
-    for file in os.listdir(crads_dir):
-        card_name = os.path.splitext(file)[0]
-        emoji = discord.utils.get(emojis_guild.emojis, name=card_name)
-        if emoji is None:
-            with open(os.path.join(crads_dir, file), "rb") as image:
-                emoji = await emojis_guild.create_custom_emoji(
-                    name=card_name, image=image.read()
-                )
-                loobibot.logger.info(f"Created {emoji.name} emoji")
-        emoji_list.append(emoji)
-
+    # Get emojis
+    emojis_guild = loobibot.get_guild(EMOJI_GUILD)
     global all_crads
-    all_crads = create_default_card_stack(emoji_list)
+    all_crads = create_default_card_stack(emojis_guild.emojis)
 
     global back_card_top_emoji, back_card_bottom_emoji
-    back_card_top_emoji = discord.utils.get(emojis_guild.emojis, name="eblankbacktop")
-    back_card_bottom_emoji = discord.utils.get(
-        emojis_guild.emojis, name="eblankbackbot"
-    )
+    back_card_top_emoji = discord.utils.get(emojis_guild.emojis, name="blankbacktop")
+    back_card_bottom_emoji = discord.utils.get(emojis_guild.emojis, name="blankbackbot")
 
     loobibot.game_command.add_command(game_blackjack)
     loobibot.add_listener(on_message_edit)
