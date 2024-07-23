@@ -20,14 +20,19 @@ class JoinRoles(commands.Cog):
         guild = member.guild
         guild_saved_roles = self.bot.get_guild_data(guild.id).roles
         if member.id in guild_saved_roles:
+            added_roles_names = []
             for role_id in guild_saved_roles[member.id]:
                 role = guild.get_role(role_id)
                 if role is not None:
                     try:
                         await member.add_roles(role, reason="Auto roles")
+                        added_roles_names.append(role.name)
                     except discord.Forbidden:
                         pass
-            self.bot.logger.info(f"Added saved roles for {member} in {member.guild}")
+            if added_roles_names:
+                self.bot.logger.info(
+                    f"Added saved roles for {member} in {member.guild}: {', '.join(added_roles_names)}"
+                )
 
 
 async def setup(bot: LoobiBot):
