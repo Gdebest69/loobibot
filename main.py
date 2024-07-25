@@ -232,7 +232,11 @@ class LoobiBot(commands.Bot):
     async def on_command_error(self, ctx, error):
         if isinstance(error, commands.CommandNotFound):
             return
-        raise error
+        await super().on_command_error(ctx, error)
+
+    async def on_error(self, event_method: str, /, *args, **kwargs) -> None:
+        print(event_method, args, kwargs, sep="\n")
+        return await super().on_error(event_method, *args, **kwargs)
 
     async def add_extensions(self, folder: str):
         for file in os.listdir(in_folder(folder)):
