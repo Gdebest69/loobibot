@@ -206,22 +206,29 @@ class PrivateChannelsCategoryView(View):
             new_category.id
         )
         await self.send_message(interaction, edit=True)
-        for channel_id in self.bot.get_guild_data(
-            interaction.guild_id
-        ).private_channels.values():
-            channel = interaction.guild.get_channel(channel_id)
-            if channel is not None:
-                await channel.move(category=new_category, end=True)
+        await self.move_channels(interaction, new_category)
 
     async def clear_category(self, interaction: discord.Interaction):
         self.bot.get_guild_data(interaction.guild_id).private_channels_category_id = 0
         await self.send_message(interaction, edit=True)
-        for channel_id in self.bot.get_guild_data(
-            interaction.guild_id
-        ).private_channels.values():
-            channel = interaction.guild.get_channel(channel_id)
-            if channel is not None:
-                await channel.move(category=None, end=True)
+        await self.move_channels(interaction, None)
+
+    async def move_channels(
+        self, interaction: discord.Interaction, category: discord.CategoryChannel
+    ):
+        try:
+            for channel_id in self.bot.get_guild_data(
+                interaction.guild_id
+            ).private_channels.values():
+                channel = interaction.guild.get_channel(channel_id)
+                if channel is not None:
+                    await channel.move(
+                        category=category,
+                        end=True,
+                        reason="Moving private channels to new category",
+                    )
+        except discord.Forbidden:
+            pass
 
     async def on_timeout(self):
         if self.message is not None:
