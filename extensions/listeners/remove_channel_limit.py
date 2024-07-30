@@ -22,7 +22,9 @@ class RemoveChannelLimit(commands.Cog):
         ):
             try:
                 limit = channel.user_limit
-                await channel.edit(user_limit=0)
+                await channel.edit(
+                    user_limit=0, reason="Remove channel user limit temporarily"
+                )
                 self.channel_limits[channel.id] = limit
             except discord.Forbidden:
                 pass
@@ -33,7 +35,10 @@ class RemoveChannelLimit(commands.Cog):
             and self.get_human_members(channel) <= self.channel_limits[channel.id]
         ):
             try:
-                await channel.edit(user_limit=self.channel_limits[channel.id])
+                await channel.edit(
+                    user_limit=self.channel_limits[channel.id],
+                    reason="Restore channel user limit",
+                )
                 self.channel_limits.pop(channel.id)
             except discord.Forbidden:
                 pass
