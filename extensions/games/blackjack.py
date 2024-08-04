@@ -311,6 +311,7 @@ class UpcomingGame(View):
 
     @tasks.loop(seconds=30)
     async def check_message(self):
+        # This still runs even after the game starts
         # print("call")
         if self.message is not None:
             try:

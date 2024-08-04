@@ -42,6 +42,8 @@ class RemoveChannelLimit(commands.Cog):
                 self.channel_limits.pop(channel.id)
             except discord.Forbidden:
                 pass
+            except KeyError:
+                pass
 
     @commands.Cog.listener()
     async def on_voice_state_update(
