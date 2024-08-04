@@ -30,9 +30,10 @@ class NWordListView(View):
         # page check
         last_page = (
             len(self.bot.get_guild_data(interaction.guild_id).n_words)
-            // MAX_VALUES_PER_PAGE
-            + 1
-        )
+            + MAX_VALUES_PER_PAGE
+            - 1
+        ) // MAX_VALUES_PER_PAGE
+
         if not 1 <= self.page <= last_page:
             await interaction.response.send_message(
                 f"Page number must be between 1 and {last_page}", ephemeral=True
