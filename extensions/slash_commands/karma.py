@@ -84,7 +84,10 @@ class KarmaListView(View):
 
     async def on_timeout(self):
         if self.message is not None:
-            await self.message.edit(view=None)
+            try:
+                await self.message.edit(view=None)
+            except discord.NotFound:
+                pass
 
 
 @app_commands.guild_only()

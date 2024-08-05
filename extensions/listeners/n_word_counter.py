@@ -85,7 +85,10 @@ class NWordListView(View):
 
     async def on_timeout(self):
         if self.message is not None:
-            await self.message.edit(view=None)
+            try:
+                await self.message.edit(view=None)
+            except discord.NotFound:
+                pass
 
 
 class NWordCounter(commands.Cog):
