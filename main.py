@@ -97,7 +97,7 @@ class LoobiBot(commands.Bot):
         self.logger = logging.getLogger("loobibot")
         super().__init__(
             intents=intents,
-            command_prefix="/",
+            command_prefix="!",
             activity=discord.Activity(
                 name=f"/help | {self.music.prefix}help",
                 type=discord.ActivityType.listening,
@@ -230,7 +230,9 @@ class LoobiBot(commands.Bot):
         return True
 
     async def on_command_error(self, ctx, error):
-        if isinstance(error, commands.CommandNotFound):
+        if isinstance(error, commands.CommandNotFound) or isinstance(
+            error, commands.MissingRequiredArgument
+        ):
             return
         await super().on_command_error(ctx, error)
 
