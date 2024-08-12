@@ -18,7 +18,7 @@ class Picasion(commands.Cog):
         self.qr_size = 175
 
     async def cog_check(self, ctx: commands.Context) -> bool:
-        return ctx.guild.id in self.allowed_guild_ids
+        return ctx.guild and ctx.guild.id in self.allowed_guild_ids
 
     @commands.command(name="help")
     async def help_command(self, ctx: commands.Context):

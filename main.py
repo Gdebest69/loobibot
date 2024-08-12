@@ -230,8 +230,10 @@ class LoobiBot(commands.Bot):
         return True
 
     async def on_command_error(self, ctx, error):
-        if isinstance(error, commands.CommandNotFound) or isinstance(
-            error, commands.MissingRequiredArgument
+        if (
+            isinstance(error, commands.CommandNotFound)
+            or isinstance(error, commands.MissingRequiredArgument)
+            or isinstance(error, commands.CheckFailure)
         ):
             return
         await super().on_command_error(ctx, error)
