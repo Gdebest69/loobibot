@@ -100,6 +100,19 @@ class DebugCommands(commands.Cog):
                 self.wake_device("my_pc")
                 await message.reply("Successfully woke up the PC", mention_author=False)
 
+    @commands.command(name="eval")
+    async def eval_command(self, ctx: commands.Context, *, eval_str: str):
+        if ctx.author.id == OWNER_ID:
+            if len(eval_str) >= 2 and eval_str[0] == "`" and eval_str[-1] == "`":
+                eval_str = eval_str[1:-1]
+            try:
+                await ctx.reply(eval(f"self.bot.{eval_str}"), mention_author=False)
+            except Exception as e:
+                if not isinstance(e, discord.Forbidden):
+                    await ctx.reply(
+                        f"{e.__class__.__name__}: {e}", mention_author=False
+                    )
+
 
 async def setup(bot: LoobiBot):
     await bot.add_cog(DebugCommands(bot))
