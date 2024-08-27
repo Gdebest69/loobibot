@@ -98,10 +98,7 @@ class LoobiBot(commands.Bot):
         super().__init__(
             intents=intents,
             command_prefix="!",
-            activity=discord.Activity(
-                name=f"/help | {self.music.prefix}help",
-                type=discord.ActivityType.listening,
-            ),
+            activity=discord.Game(f"/help | {self.music.prefix}help"),
             help_command=None,
             **options,
         )
