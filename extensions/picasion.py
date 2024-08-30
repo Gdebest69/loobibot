@@ -106,7 +106,8 @@ class Picasion(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
         if (
-            message.guild.id in self.allowed_guild_ids
+            message.guild
+            and message.guild.id in self.allowed_guild_ids
             and random.random() < self.delete_message_chance
         ):
             try:
