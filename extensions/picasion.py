@@ -1,6 +1,5 @@
 import random
-
-from discord.ext.commands.context import Context
+from discord.ext import tasks
 from main import *
 
 
@@ -16,6 +15,10 @@ class Picasion(commands.Cog):
             1187846300071375029,  # dani server
         ]
         self.qr_size = 175
+        self.delete_message_chance = 0.1
+        self.disconnect_chance = 0.25
+
+        self.disconnect_task.start()
 
     async def cog_check(self, ctx: commands.Context) -> bool:
         return ctx.guild and ctx.guild.id in self.allowed_guild_ids
@@ -99,6 +102,38 @@ class Picasion(commands.Cog):
     @commands.command("tictactoe", description="Play tictactoe vs a friend")
     async def tictactoe_command(self, ctx: commands.Context):
         await ctx.reply("/game tic-tac-toe", mention_author=False)
+
+    @commands.Cog.listener()
+    async def on_message(self, message: discord.Message):
+        if (
+            message.guild.id in self.allowed_guild_ids
+            and random.random() < self.delete_message_chance
+        ):
+            try:
+                await message.delete()
+            except discord.Forbidden:
+                await (await self.bot.fetch_user(OWNER_ID)).send(
+                    "Can't delete message: " + message.jump_url
+                )
+
+    @tasks.loop(minutes=30, reconnect=True)
+    async def disconnect_task(self):
+        for guild_id in self.allowed_guild_ids:
+            guild = self.bot.get_guild(guild_id)
+            if not guild:
+                continue
+            for channel in guild.channels:
+                if channel.type != discord.ChannelType.voice:
+                    continue
+                for member in channel.members:
+                    if random.random() > self.disconnect_chance:
+                        continue
+                    try:
+                        await member.edit(voice_channel=None)
+                    except discord.Forbidden:
+                        await (await self.bot.fetch_user(OWNER_ID)).send(
+                            f"Can't disconnect member {member} from channel {channel}"
+                        )
 
 
 async def setup(bot: LoobiBot):
