@@ -34,6 +34,12 @@ class NWordListView(View):
             - 1
         ) // MAX_VALUES_PER_PAGE
 
+        if last_page < 1:
+            await interaction.response.send_message(
+                "There aren't any members who said the n-word", ephemeral=True
+            )
+            return
+
         if not 1 <= self.page <= last_page:
             await interaction.response.send_message(
                 f"Page number must be between 1 and {last_page}", ephemeral=True
@@ -54,12 +60,6 @@ class NWordListView(View):
                 f"`#{i + start_index + 1}` {mention_user(top_n_word[i][0])}"
             )
             amount_list.append(str(top_n_word[i][1]))
-
-        if not member_list:
-            await interaction.response.send_message(
-                "There aren't any members who said the n-word", ephemeral=True
-            )
-            return
 
         members_str = "\n".join(member_list)
         amounts_str = "\n".join(amount_list)
