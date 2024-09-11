@@ -36,7 +36,7 @@ class KarmaListView(View):
 
         if last_page < 1:
             await interaction.response.send_message(
-                "There aren't any members who said the n-word", ephemeral=True
+                "There aren't any members with karma", ephemeral=True
             )
             return
 
