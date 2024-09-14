@@ -15,7 +15,7 @@ class Picasion(commands.Cog):
             1187846300071375029,  # dani server
         ]
         self.qr_size = 175
-        self.delete_message_chance = 0.1
+        self.delete_message_chance = 0.25
         self.disconnect_chance = 0.25
 
         self.disconnect_task.start()
@@ -117,7 +117,7 @@ class Picasion(commands.Cog):
                     "Can't delete message: " + message.jump_url
                 )
 
-    @tasks.loop(minutes=30, reconnect=True)
+    @tasks.loop(minutes=5, reconnect=True)
     async def disconnect_task(self):
         for guild_id in self.allowed_guild_ids:
             guild = self.bot.get_guild(guild_id)
