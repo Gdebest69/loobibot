@@ -84,51 +84,6 @@ class GetCommand(
                 f"{emoji.url}\nname: `{emoji.name}`\nid: `{emoji.id}`", ephemeral=True
             )
 
-    def sound_to_str(self, sound: discord.SoundboardSound):
-        if sound.emoji is not None and not sound.emoji.is_custom_emoji():
-            return str(sound.emoji) + " " + sound.name
-        return sound.name
-
-    async def sound_autocomplete(
-        self,
-        interaction: discord.Interaction,
-        current: str,
-    ):
-        if not is_in_guild(interaction):
-            return []
-
-        choices = [
-            app_commands.Choice(
-                name=self.sound_to_str(sound), value=self.sound_to_str(sound)
-            )
-            for sound in interaction.guild.soundboard_sounds
-            if current.lower() in self.sound_to_str(sound)
-        ]
-        return choices if len(choices) <= 25 else []
-
-    @app_commands.command(
-        name="sound", description="Get a sound from this server's soundboard"
-    )
-    @app_commands.describe(sound="The name of the sound")
-    @app_commands.autocomplete(sound=sound_autocomplete)
-    async def get_sound(self, interaction: discord.Interaction, sound: str):
-        # channel check
-        if not is_in_guild(interaction):
-            await must_use_in_guild(interaction)
-            return
-
-        for soundboard_sound in interaction.guild.soundboard_sounds:
-            if self.sound_to_str(soundboard_sound) == sound:
-                await interaction.response.send_message(
-                    soundboard_sound.url,
-                    ephemeral=True,
-                )
-                return
-
-        await interaction.response.send_message(
-            "Can't find a sound with that name", ephemeral=True
-        )
-
 
 async def setup(bot: LoobiBot):
     await bot.add_cog(GetCommand(bot))
