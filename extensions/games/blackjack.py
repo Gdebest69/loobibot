@@ -491,7 +491,7 @@ class BlackjackGame(View):
                 elif isinstance(ctx, discord.Message):
                     await ctx.edit(embed=embed, view=self)
 
-        except discord.errors.NotFound:
+        except discord.errors.NotFound or discord.HTTPException:
             if self.message.id in blackjack_games:
                 cancel_game(blackjack_games[self.message.id])
                 blackjack_games.pop(self.message.id)
