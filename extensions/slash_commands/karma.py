@@ -92,13 +92,16 @@ class KarmaListView(View):
 
 
 @app_commands.guild_only()
+@app_commands.allowed_installs(guilds=True, users=False)
 class KarmaCommand(
     commands.GroupCog, name="karma", description="Commands related to karma"
 ):
     def __init__(self, bot: LoobiBot):
         self.bot = bot
         self.get_karma_ctx_menu = app_commands.ContextMenu(
-            name="Get karma", callback=self.get_karma
+            name="Get karma",
+            callback=self.get_karma,
+            allowed_installs=app_commands.AppInstallationType(guild=True, user=False),
         )
         self.bot.tree.add_command(self.get_karma_ctx_menu)
 

@@ -128,6 +128,7 @@ class NWordCounter(commands.Cog):
     )
     @app_commands.describe(page="The leaderboard page number")
     @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=False)
+    @app_commands.allowed_installs(guilds=True, users=False)
     async def n_leaderboard_command(
         self, interaction: discord.Interaction, page: int = 1
     ):

@@ -111,7 +111,9 @@ class LoobiBot(commands.Bot):
         self.load_data()
 
         self.game_command = app_commands.Group(
-            name="game", description="Play the stupid games I made"
+            name="game",
+            description="Play the stupid games I made",
+            allowed_installs=app_commands.AppInstallationType(guild=True, user=False),
         )
         self.add_commands_to_tree(self.game_command)
 

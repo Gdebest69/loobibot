@@ -677,6 +677,7 @@ class GameStatusChannelsView(View):
 
 
 @app_commands.guild_only()
+@app_commands.allowed_installs(guilds=True, users=False)
 @app_commands.default_permissions()
 class SettingsCommand(
     commands.GroupCog, name="settings", description="Change my settings for this guild"

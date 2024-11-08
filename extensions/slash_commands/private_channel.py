@@ -2,6 +2,7 @@ from main import *
 
 
 @app_commands.guild_only()
+@app_commands.allowed_installs(guilds=True, users=False)
 class PrivateChannelCommand(
     commands.GroupCog,
     name="private-channel",

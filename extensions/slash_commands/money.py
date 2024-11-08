@@ -1,6 +1,7 @@
 from main import *
 
 
+@app_commands.allowed_installs(guilds=True, users=False)
 class MoneyCommand(
     commands.GroupCog,
     name="money",
@@ -9,7 +10,9 @@ class MoneyCommand(
     def __init__(self, bot: LoobiBot):
         self.bot = bot
         self.get_money_ctx_menu = app_commands.ContextMenu(
-            name="Get money", callback=self.get_money
+            name="Get money",
+            callback=self.get_money,
+            allowed_installs=app_commands.AppInstallationType(guild=True, user=False),
         )
         self.bot.tree.add_command(self.get_money_ctx_menu)
 
@@ -51,7 +54,6 @@ class MoneyCommand(
     ):
         await self.get_money(interaction, user)
 
-    @app_commands.guild_only()
     async def get_money(
         self, interaction: discord.Interaction, user: discord.User = None
     ):
