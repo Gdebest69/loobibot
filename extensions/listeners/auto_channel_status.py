@@ -92,9 +92,13 @@ class AutoChannelStatus(commands.Cog):
 
     @commands.Cog.listener()
     async def on_audit_log_entry_create(self, entry: discord.AuditLogEntry):
-        if not entry.user.bot and (
-            entry.action == discord.AuditLogAction.voice_channel_status_update
-            or entry.action == discord.AuditLogAction.voice_channel_status_delete
+        if (
+            entry.user is not None
+            and not entry.user.bot
+            and (
+                entry.action == discord.AuditLogAction.voice_channel_status_update
+                or entry.action == discord.AuditLogAction.voice_channel_status_delete
+            )
         ):
             channel = entry.target
             if isinstance(channel, discord.VoiceChannel):
