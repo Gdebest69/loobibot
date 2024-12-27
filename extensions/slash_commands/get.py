@@ -34,8 +34,8 @@ class GetCommand(
 
     async def emoji_conventer(self, ctx: commands.Context, argument: str):
         try:
-            emoji = await commands.EmojiConverter().convert(ctx, argument)
-        except commands.EmojiNotFound:
+            emoji = await commands.PartialEmojiConverter().convert(ctx, argument)
+        except commands.PartialEmojiConversionFailure:
             emoji = discord.utils.get(ctx.guild.emojis, name=argument)
         return emoji
 
