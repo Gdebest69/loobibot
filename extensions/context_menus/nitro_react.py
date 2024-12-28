@@ -29,11 +29,10 @@ class EmojiModal(Modal):
                 "The id must be a positive integer", ephemeral=True
             )
             return
-        emoji_str = f"{self.emoji_name}:{self.emoji_id}"
+
+        emoji = discord.PartialEmoji.from_str(f"{self.emoji_name}:{self.emoji_id}")
         try:
-            await self.message._state.http.add_reaction(
-                self.message.channel.id, self.message.id, emoji_str
-            )
+            await self.message.add_reaction(emoji)
             await interaction.response.defer()
         except discord.errors.Forbidden:
             await interaction.response.send_message(
