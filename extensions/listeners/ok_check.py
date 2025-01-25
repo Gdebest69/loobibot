@@ -9,10 +9,13 @@ class OkCheck(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
+        filtered_message = (
+            discord.utils.remove_markdown(message.content).strip().lower()
+        )
         if (
             is_in_guild(message)
             and message.channel.id == self.channel_id
-            and message.content.lower() != self.ok_message
+            and filtered_message != self.ok_message
         ):
             try:
                 await message.delete()
