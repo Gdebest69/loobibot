@@ -7,7 +7,6 @@ class FunStuff(commands.Cog):
         self.reach_id = 294452820353089536
         self.ok_channel_id = 1264654642374115328
         self.ok_message = "ok"
-        self.yeshua_id = 746732379984494642
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
@@ -37,7 +36,7 @@ class FunStuff(commands.Cog):
         # yeshuagay5
         if plain_message(message.content).lower() == "gay":
             print_message(message, self.bot.logger)
-            await message.reply(f"Just like {mention_user(self.yeshua_id)}")
+            await message.reply(f"Just like yeshua")
 
 
 async def setup(bot: LoobiBot):
