@@ -184,9 +184,7 @@ def is_user_installed(
         base_command = command.parent
     else:
         base_command = command
-    return (
-        base_command.allowed_installs is not None and base_command.allowed_installs.user
-    )
+    return base_command.allowed_installs is None or base_command.allowed_installs.user
 
 
 def is_guild_installed(
@@ -196,7 +194,10 @@ def is_guild_installed(
         base_command = command.parent
     else:
         base_command = command
-    return base_command.allowed_installs is None or base_command.allowed_installs.guild
+    return (
+        base_command.allowed_installs is not None
+        and base_command.allowed_installs.guild
+    )
 
 
 async def get_router_ip():

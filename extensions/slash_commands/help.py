@@ -122,17 +122,16 @@ class HelpCommand(commands.Cog):
                     embed.add_field(name="Arguments", value="\n".join(args))
 
             base_command = cmd if cmd.parent is None else cmd.parent
-            if base_command.allowed_installs is not None:
-                allowed_installs = []
-                if base_command.allowed_installs.guild:
-                    allowed_installs.append("guild")
-                if base_command.allowed_installs.user:
-                    allowed_installs.append("user")
-                embed.add_field(
-                    name="Allowed installs",
-                    value=", ".join(allowed_installs),
-                    inline=False,
-                )
+            allowed_installs = []
+            if is_guild_installed(base_command):
+                allowed_installs.append("guild")
+            if is_user_installed(base_command):
+                allowed_installs.append("user")
+            embed.add_field(
+                name="Allowed installs",
+                value=", ".join(allowed_installs),
+                inline=False,
+            )
             if base_command.allowed_contexts is not None:
                 allowed_contexts = []
                 if base_command.allowed_contexts.guild:
