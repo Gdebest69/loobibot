@@ -54,13 +54,12 @@ class NitroReactCommand(commands.Cog):
     def __init__(self, bot: LoobiBot):
         self.bot = bot
         self.nitro_react_ctx_menu = app_commands.ContextMenu(
-            name="Nitro react",
-            callback=self.nitro_react,
-            allowed_installs=app_commands.AppInstallationType(guild=True, user=False),
+            name="Nitro react", callback=self.nitro_react
         )
         self.bot.tree.add_command(self.nitro_react_ctx_menu)
 
     @app_commands.default_permissions()
+    @app_commands.allowed_installs(guilds=True, users=False)
     async def nitro_react(
         self, interaction: discord.Interaction, message: discord.Message
     ):
