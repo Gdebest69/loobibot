@@ -21,9 +21,11 @@ class GetEmojiCommand(commands.Cog):
                 f"{emoji.url}\nname: `{emoji.name}`\nid: `{emoji.id}`", ephemeral=True
             )
         except commands.PartialEmojiConversionFailure:
-            emoji_url = get_emoji_asset(emoji_str)
+            emoji_url, emoji_name = get_emoji_asset(emoji_str)
             if emoji_url is not None:
-                await interaction.response.send_message(emoji_url, ephemeral=True)
+                await interaction.response.send_message(
+                    f"{emoji_url}\nname: `{emoji_name}`", ephemeral=True
+                )
             else:
                 await interaction.response.send_message(
                     "Couldn't convert your input to an emoji", ephemeral=True

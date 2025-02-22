@@ -244,11 +244,11 @@ with open(in_folder(os.path.join("assets", "discord_default_emojis.json"))) as f
     discord_default_emojis_list: list[dict] = json.load(file)
 
 
-def get_emoji_asset(emoji_str: str) -> str | None:
+def get_emoji_asset(emoji_str: str) -> tuple[str, str] | tuple[None, None]:
     for entry in discord_default_emojis_list:
         if emoji_str in entry["strings"]:
-            return entry["asset"]
-    return None
+            return entry["asset"], entry["names"][0]
+    return None, None
 
 
 class JMusicBot:
