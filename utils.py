@@ -240,6 +240,17 @@ def plain_message(message_content: str):
     return discord.utils.remove_markdown(message_content.removeprefix("-# ")).strip()
 
 
+with open(in_folder(os.path.join("assets", "discord_default_emojis.json"))) as file:
+    discord_default_emojis_list: list[dict] = json.load(file)
+
+
+def get_emoji_asset(emoji_str: str) -> str | None:
+    for entry in discord_default_emojis_list:
+        if emoji_str in entry["strings"]:
+            return entry["asset"]
+    return None
+
+
 class JMusicBot:
     def __init__(self, path: str):
         self.path = path

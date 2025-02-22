@@ -21,9 +21,13 @@ class GetEmojiCommand(commands.Cog):
                 f"{emoji.url}\nname: `{emoji.name}`\nid: `{emoji.id}`", ephemeral=True
             )
         except commands.PartialEmojiConversionFailure:
-            await interaction.response.send_message(
-                "Couldn't convert your input to an emoji", ephemeral=True
-            )
+            emoji_url = get_emoji_asset(emoji_str)
+            if emoji_url is not None:
+                await interaction.response.send_message(emoji_url, ephemeral=True)
+            else:
+                await interaction.response.send_message(
+                    "Couldn't convert your input to an emoji", ephemeral=True
+                )
 
 
 async def setup(bot: LoobiBot):
