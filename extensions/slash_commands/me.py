@@ -6,7 +6,7 @@ class GetMeCommand(commands.Cog):
         self.bot = bot
 
     @app_commands.command(
-        name="get-me",
+        name="me",
         description="Silently mentions you so you can see your roles etc.",
     )
     @app_commands.user_install()
