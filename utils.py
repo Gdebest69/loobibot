@@ -236,6 +236,10 @@ def time_remaining(seconds: float):
     return f"{int(value)} {t}"
 
 
+def plain_message(message_content: str):
+    return discord.utils.remove_markdown(message_content.removeprefix("-# ")).strip()
+
+
 class JMusicBot:
     def __init__(self, path: str):
         self.path = path

@@ -165,7 +165,7 @@ class KarmaCommand(
             return
 
         # gg
-        if message.content.lower() == "gg":
+        if plain_message(message.content).lower() == "gg":
             # channel check
             if is_in_dm(message):
                 return
