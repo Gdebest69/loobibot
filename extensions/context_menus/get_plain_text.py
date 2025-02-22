@@ -1,4 +1,3 @@
-import asyncio
 from io import StringIO
 from main import *
 
@@ -7,7 +6,7 @@ class GetPlainTextCommand(commands.Cog):
     def __init__(self, bot: LoobiBot):
         self.bot = bot
         self.get_plain_text_ctx_menu = app_commands.ContextMenu(
-            name="Get Plain Text",
+            name="Get plain text",
             callback=self.get_plain_text,
         )
         self.bot.tree.add_command(self.get_plain_text_ctx_menu)

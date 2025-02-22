@@ -1,7 +1,7 @@
 from main import *
 
 
-class GetMeCommand(commands.Cog):
+class MeCommand(commands.Cog):
     def __init__(self, bot: LoobiBot):
         self.bot = bot
 
@@ -18,4 +18,4 @@ class GetMeCommand(commands.Cog):
 
 
 async def setup(bot: LoobiBot):
-    await bot.add_cog(GetMeCommand(bot))
+    await bot.add_cog(MeCommand(bot))

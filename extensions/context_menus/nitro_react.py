@@ -54,7 +54,7 @@ class NitroReactCommand(commands.Cog):
     def __init__(self, bot: LoobiBot):
         self.bot = bot
         self.nitro_react_ctx_menu = app_commands.ContextMenu(
-            name="Nitro React",
+            name="Nitro react",
             callback=self.nitro_react,
             allowed_installs=app_commands.AppInstallationType(guild=True, user=False),
         )
