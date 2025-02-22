@@ -18,6 +18,7 @@ class FunStuff(commands.Cog):
             and "pokemonshowdown.com" in message.content
             and message.author.id == self.reach_id
         ):
+            print_message(message, self.bot.logger)
             await message.delete()
 
     # Delete any message in the ok channel that doesn't contain "ok"
@@ -28,6 +29,7 @@ class FunStuff(commands.Cog):
             and message.channel.id == self.ok_channel_id
             and plain_message(message.content).lower() != self.ok_message
         ):
+            print_message(message, self.bot.logger)
             try:
                 await message.delete()
                 await message.author.send("Not ok")
@@ -38,6 +40,7 @@ class FunStuff(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
         if plain_message(message.content).lower() == "gay":
+            print_message(message, self.bot.logger)
             await message.reply(f"Just like {mention_user(self.yeshua_id)}")
 
 
