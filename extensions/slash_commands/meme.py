@@ -68,6 +68,7 @@ class ImageLayer:
 
 
 @app_commands.allowed_installs(guilds=True, users=True)
+@app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
 class MemeCommand(
     commands.GroupCog,
     name="meme",
@@ -75,8 +76,11 @@ class MemeCommand(
 ):
     def __init__(self, bot: LoobiBot):
         self.bot = bot
-        self.meme_lowtaperfade_base = ImageLayer.from_file(
+        self.lowtaperfade_base = ImageLayer.from_file(
             in_folder(os.path.join("assets", "memes", "ninja_lowtaperfade.png")), (0, 0)
+        )
+        self.ninja_hair = ImageLayer.from_file(
+            in_folder(os.path.join("assets", "memes", "ninja_hair.png")), (0, 0)
         )
 
     @app_commands.command(
@@ -90,18 +94,14 @@ class MemeCommand(
             user = interaction.user
 
         await interaction.response.defer()
-        base = self.meme_lowtaperfade_base.copy()
+        base = self.lowtaperfade_base.copy()
         base.append_layer(
             await ImageLayer.from_asset(
                 user.display_avatar, (47, 80), circle=True, remove_transparency=True
             ),
             (190, 190),
         )
-        base.append_layer(
-            ImageLayer.from_file(
-                in_folder(os.path.join("assets", "memes", "ninja_hair.png")), (0, 0)
-            )
-        )
+        base.append_layer(self.ninja_hair)
         await interaction.edit_original_response(
             attachments=[
                 base.to_discord_file(
