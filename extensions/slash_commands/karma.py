@@ -29,7 +29,7 @@ class KarmaListView(View):
     async def send_message(self, interaction: discord.Interaction, edit: bool = False):
         # page check
         last_page = (
-            len(self.bot.get_guild_data(interaction.guild_id).n_words)
+            len(self.bot.get_guild_data(interaction.guild_id).karma)
             + MAX_VALUES_PER_PAGE
             - 1
         ) // MAX_VALUES_PER_PAGE
