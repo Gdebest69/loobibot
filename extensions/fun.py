@@ -37,6 +37,8 @@ class FunStuff(commands.Cog):
         if plain_message(message.content).lower() == "gay":
             print_message(message, self.bot.logger)
             await message.reply(f"Just like yeshua")
+        elif plain_message(message.content).lower() == "hella gay":
+            await message.reply(f"Totally Yeshua")
 
 
 async def setup(bot: LoobiBot):
