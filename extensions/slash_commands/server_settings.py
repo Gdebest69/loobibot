@@ -701,7 +701,7 @@ class AutoRolesFeatureView(View):
         embed = discord.Embed(
             color=EMBED_COLOR,
             title="Auto roles feature",
-            description=f"Status: {"**Enabled**" if auto_roles_enabled else "**Disabled**"}",
+            description=f"Status: {'**Enabled**' if auto_roles_enabled else '**Disabled**'}",
         )
         if auto_roles_enabled:
             self.add_item(self.disable_auto_roles_button).remove_item(
