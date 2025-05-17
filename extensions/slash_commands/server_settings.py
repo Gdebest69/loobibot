@@ -385,7 +385,7 @@ class CommandsView(View):
             cmd
             for cmd in self.bot.tree.get_commands()
             + self.bot.tree.get_commands(guild=interaction.guild)
-            if type(cmd) != app_commands.ContextMenu
+            if not isinstance(cmd, app_commands.ContextMenu) and is_guild_installed(cmd)
         ]
         guild_disabled_commands = self.bot.get_guild_data(
             interaction.guild_id
