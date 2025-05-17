@@ -764,6 +764,11 @@ class SettingsCommand(
 
         return True
 
+    async def cog_app_command_error(self, interaction, error):
+        if isinstance(error, app_commands.CheckFailure):
+            return
+        return await super().cog_app_command_error(interaction, error)
+
     @app_commands.command(
         name="private-channel-roles",
         description="Roles required to create a private channel",
