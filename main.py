@@ -35,6 +35,7 @@ class GuildData:
         disabled_channels: list[int] = None,
         game_status_channels_id: list[int] = None,
         n_words: dict[int, int] = None,
+        auto_roles_enabled: bool = False,
     ):
         if n_words is None:
             n_words = {}
@@ -71,9 +72,11 @@ class GuildData:
         self.disabled_channels = disabled_channels
         self.game_status_channels_id = game_status_channels_id
         self.n_words = n_words
+        self.auto_roles_enabled = auto_roles_enabled
 
     def update(self):
-        pass
+        if not hasattr(self, "auto_roles_enabled"):
+            self.auto_roles_enabled = False
 
 
 class UserData:

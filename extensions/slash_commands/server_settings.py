@@ -676,6 +676,69 @@ class GameStatusChannelsView(View):
         return True
 
 
+class AutoRolesFeatureView(View):
+    def __init__(self, bot: LoobiBot):
+        super().__init__(timeout=TIMEOUT)
+        self.message = None
+        self.bot = bot
+
+        self.enable_auto_roles_button = Button(
+            style=ButtonStyle.green, label="Enable auto roles"
+        )
+        self.enable_auto_roles_button.callback = self.enable_auto_roles
+
+        self.disable_auto_roles_button = Button(
+            style=ButtonStyle.red, label="Disable auto roles"
+        )
+        self.disable_auto_roles_button.callback = self.disable_auto_roles
+
+    async def send_message(
+        self, interaction: discord.Interaction, *, edit: bool = False
+    ):
+        auto_roles_enabled = self.bot.get_guild_data(
+            interaction.guild_id
+        ).auto_roles_enabled
+        embed = discord.Embed(
+            color=EMBED_COLOR,
+            title="Auto roles feature",
+            description=f"Status: {"**Enabled**" if auto_roles_enabled else "**Disabled**"}",
+        )
+        if auto_roles_enabled:
+            self.add_item(self.disable_auto_roles_button).remove_item(
+                self.enable_auto_roles_button
+            )
+        else:
+            self.add_item(self.enable_auto_roles_button).remove_item(
+                self.disable_auto_roles_button
+            )
+
+        if edit:
+            await interaction.response.edit_message(embed=embed, view=self)
+        else:
+            await interaction.response.send_message(
+                embed=embed, view=self, ephemeral=True
+            )
+            self.message = await interaction.original_response()
+
+    async def enable_auto_roles(self, interaction: discord.Interaction):
+        self.bot.get_guild_data(interaction.guild_id).auto_roles_enabled = True
+        await self.send_message(interaction, edit=True)
+
+    async def disable_auto_roles(self, interaction: discord.Interaction):
+        self.bot.get_guild_data(interaction.guild_id).auto_roles_enabled = False
+        await self.send_message(interaction, edit=True)
+
+    async def on_timeout(self):
+        if self.message is not None:
+            await self.message.edit(view=None)
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        if not interaction.user.guild_permissions.administrator:
+            await interaction.response.defer()
+            return False
+        return True
+
+
 @app_commands.guild_only()
 @app_commands.allowed_installs(guilds=True, users=False)
 @app_commands.default_permissions()
@@ -684,27 +747,28 @@ class SettingsCommand(
 ):
     def __init__(self, bot: LoobiBot):
         self.bot = bot
-        self.invalid_permission_message = (
-            "You must have administrator permissions to use this command"
-        )
+
+    async def interaction_check(self, interaction: discord.Interaction):
+        # channel check
+        if not is_in_guild(interaction):
+            await must_use_in_guild(interaction)
+            return False
+
+        # permission check
+        if not interaction.user.guild_permissions.administrator:
+            await interaction.response.send_message(
+                "You must have administrator permissions to use this command",
+                ephemeral=True,
+            )
+            return False
+
+        return True
 
     @app_commands.command(
         name="private-channel-roles",
         description="Roles required to create a private channel",
     )
     async def settings_private_channel_roles(self, interaction: discord.Interaction):
-        # channel check
-        if is_in_dm(interaction):
-            await must_use_in_guild(interaction)
-            return
-
-        # permission check
-        if not interaction.user.guild_permissions.administrator:
-            await interaction.response.send_message(
-                self.invalid_permission_message, ephemeral=True
-            )
-            return
-
         await ManageRolesView(
             self.bot, "private_channel_roles_id", "Private channel roles"
         ).send_message(interaction)
@@ -713,18 +777,6 @@ class SettingsCommand(
         name="dj-roles", description="Roles required to get the DJ role"
     )
     async def settings_dj_roles(self, interaction: discord.Interaction):
-        # channel check
-        if is_in_dm(interaction):
-            await must_use_in_guild(interaction)
-            return
-
-        # permission check
-        if not interaction.user.guild_permissions.administrator:
-            await interaction.response.send_message(
-                self.invalid_permission_message, ephemeral=True
-            )
-            return
-
         await ManageRolesView(
             self.bot,
             "dj_roles_id",
@@ -739,18 +791,6 @@ class SettingsCommand(
     async def settings_private_channels_category(
         self, interaction: discord.Interaction
     ):
-        # channel check
-        if is_in_dm(interaction):
-            await must_use_in_guild(interaction)
-            return
-
-        # permission check
-        if not interaction.user.guild_permissions.administrator:
-            await interaction.response.send_message(
-                self.invalid_permission_message, ephemeral=True
-            )
-            return
-
         await PrivateChannelsCategoryView(self.bot).send_message(interaction)
 
     @app_commands.command(
@@ -758,18 +798,6 @@ class SettingsCommand(
         description="The amount of karma a user gets when saying gg",
     )
     async def settings_karma_amounts(self, interaction: discord.Interaction):
-        # channel check
-        if is_in_dm(interaction):
-            await must_use_in_guild(interaction)
-            return
-
-        # permission check
-        if not interaction.user.guild_permissions.administrator:
-            await interaction.response.send_message(
-                self.invalid_permission_message, ephemeral=True
-            )
-            return
-
         await KarmaAmountsView(self.bot).send_message(interaction)
 
     @app_commands.command(
@@ -777,18 +805,6 @@ class SettingsCommand(
         description="Enabled and disabled commands in this server",
     )
     async def settings_enabled_commands(self, interaction: discord.Interaction):
-        # channel check
-        if is_in_dm(interaction):
-            await must_use_in_guild(interaction)
-            return
-
-        # permission check
-        if not interaction.user.guild_permissions.administrator:
-            await interaction.response.send_message(
-                self.invalid_permission_message, ephemeral=True
-            )
-            return
-
         await CommandsView(self.bot).send_message(interaction)
 
     @app_commands.command(
@@ -796,18 +812,6 @@ class SettingsCommand(
         description="Channels that can't be used to run my commands",
     )
     async def settings_disabled_channels(self, interaction: discord.Interaction):
-        # channel check
-        if is_in_dm(interaction):
-            await must_use_in_guild(interaction)
-            return
-
-        # permission check
-        if not interaction.user.guild_permissions.administrator:
-            await interaction.response.send_message(
-                self.invalid_permission_message, ephemeral=True
-            )
-            return
-
         await ManageDisabledChannelsView(self.bot).send_message(interaction)
 
     @app_commands.command(
@@ -815,19 +819,14 @@ class SettingsCommand(
         description="Automatically update voice channel status based on members' game activity",
     )
     async def settings_game_status_channels(self, interaction: discord.Interaction):
-        # channel check
-        if is_in_dm(interaction):
-            await must_use_in_guild(interaction)
-            return
-
-        # permission check
-        if not interaction.user.guild_permissions.administrator:
-            await interaction.response.send_message(
-                self.invalid_permission_message, ephemeral=True
-            )
-            return
-
         await GameStatusChannelsView(self.bot).send_message(interaction)
+
+    @app_commands.command(
+        name="auto-roles-feature",
+        description="If a member rejoins the server, it will add the roles he had before leaving",
+    )
+    async def settings_auto_roles_feature(self, interaction: discord.Interaction):
+        await AutoRolesFeatureView(self.bot).send_message(interaction)
 
 
 async def setup(bot: LoobiBot):

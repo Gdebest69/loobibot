@@ -16,14 +16,16 @@ class JoinRoles(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
-        # add saved roles
         guild = member.guild
+        if not self.bot.get_guild_data(guild.id).auto_roles_enabled:
+            return
+        # add saved roles
         guild_saved_roles = self.bot.get_guild_data(guild.id).roles
         if member.id in guild_saved_roles:
             added_roles_names = []
             for role_id in guild_saved_roles[member.id]:
                 role = guild.get_role(role_id)
-                if role is not None:
+                if role is not None and role.is_assignable():
                     try:
                         await member.add_roles(role, reason="Auto roles")
                         added_roles_names.append(role.name)
