@@ -193,9 +193,11 @@ class LoobiBot(commands.Bot):
         if self.get_user_data(interaction.user.id) is None:
             self.set_user_data(interaction.user.id, UserData())
         # ignore any restrictions if the command is only user installed
-        if is_user_installed(interaction.command) and not is_guild_installed(
-            interaction.command
-        ):
+        # or used in a server that the bot is not in
+        if (
+            is_user_installed(interaction.command)
+            and not is_guild_installed(interaction.command)
+        ) or self.get_guild(interaction.guild_id) is None:
             return True
         # update guild data if missing
         if (
