@@ -87,6 +87,7 @@ class MemeCommand(
         name="lowtaperfade",
         description="Gives a user a low taper fade",
     )
+    @app_commands.describe(user="The user to give low taper fade")
     async def meme_lowtaperfade(
         self, interaction: discord.Interaction, user: discord.User = None
     ):
