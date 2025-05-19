@@ -1,5 +1,6 @@
 from PIL import Image, ImageDraw
 from io import BytesIO
+from asyncio import to_thread
 from main import *
 
 
@@ -13,14 +14,13 @@ class ImageLayer:
         return ImageLayer(Image.open(file_path).convert("RGBA"), position)
 
     @staticmethod
-    async def from_asset(
-        asset: discord.Asset,
+    def from_bytes(
+        image_bytes: bytes,
         position: tuple[int, int],
         circle: bool = False,
         remove_transparency: bool = False,
     ):
-        data = await asset.read()
-        image = Image.open(BytesIO(data)).convert("RGBA")
+        image = Image.open(BytesIO(image_bytes)).convert("RGBA")
         if remove_transparency:
             image = ImageLayer._remove_transparency(image)
         if circle:
@@ -94,20 +94,23 @@ class MemeCommand(
             user = interaction.user
 
         await interaction.response.defer()
-        base = self.lowtaperfade_base.copy()
-        base.append_layer(
-            await ImageLayer.from_asset(
-                user.display_avatar, (47, 80), circle=True, remove_transparency=True
-            ),
-            (190, 190),
-        )
-        base.append_layer(self.ninja_hair)
+        avatar_bytes = await user.display_avatar.read()
+
+        def generate_image():
+            base = self.lowtaperfade_base.copy()
+            base.append_layer(
+                ImageLayer.from_bytes(
+                    avatar_bytes, (47, 80), circle=True, remove_transparency=True
+                ),
+                (190, 190),
+            )
+            base.append_layer(self.ninja_hair)
+            return base.to_discord_file(
+                f"Imagine if {user.display_name} had a low taper fade.png"
+            )
+
         await interaction.edit_original_response(
-            attachments=[
-                base.to_discord_file(
-                    f"Imagine if {user.display_name} had a low taper fade.png"
-                )
-            ]
+            attachments=[await to_thread(generate_image)]
         )
 
 
