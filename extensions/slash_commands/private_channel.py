@@ -11,6 +11,18 @@ class PrivateChannelCommand(
     def __init__(self, bot: LoobiBot):
         self.bot = bot
 
+    async def interaction_check(self, interaction):
+        # channel check
+        if is_in_dm(interaction):
+            await must_use_in_guild(interaction)
+            return False
+        return True
+
+    async def cog_app_command_error(self, interaction, error):
+        if isinstance(error, app_commands.CheckFailure):
+            return
+        return await super().cog_app_command_error(interaction, error)
+
     @app_commands.command(name="create", description="Create a private channel")
     @app_commands.choices(
         channel_type=[
@@ -28,11 +40,6 @@ class PrivateChannelCommand(
         channel_type: app_commands.Choice[str],
         name: str,
     ):
-        # channel check
-        if is_in_dm(interaction):
-            await must_use_in_guild(interaction)
-            return
-
         # roles check
         private_channel_roles_id = self.bot.get_guild_data(
             interaction.guild_id
@@ -110,11 +117,6 @@ class PrivateChannelCommand(
 
     @app_commands.command(name="delete", description="Delete your private channel")
     async def channel_delete(self, interaction: discord.Interaction):
-        # channel check
-        if is_in_dm(interaction):
-            await must_use_in_guild(interaction)
-            return
-
         private_channels = self.bot.get_guild_data(
             interaction.guild_id
         ).private_channels
@@ -153,11 +155,6 @@ class PrivateChannelCommand(
         description="Get back your permissions in your private channel if you lost them",
     )
     async def channel_redeem(self, interaction: discord.Interaction):
-        # channel check
-        if is_in_dm(interaction):
-            await must_use_in_guild(interaction)
-            return
-
         private_channels = self.bot.get_guild_data(
             interaction.guild_id
         ).private_channels
@@ -197,11 +194,6 @@ class PrivateChannelCommand(
         name="list", description="A list of all the private channels and their owners"
     )
     async def channel_list(self, interaction: discord.Interaction):
-        # channel check
-        if is_in_dm(interaction):
-            await must_use_in_guild(interaction)
-            return
-
         # permission check
         if not interaction.user.guild_permissions.administrator:
             await interaction.response.send_message(
@@ -230,7 +222,7 @@ class PrivateChannelCommand(
         embed = discord.Embed(color=EMBED_COLOR, title="Private channels")
         embed.add_field(name="Members", value=members_str, inline=True)
         embed.add_field(name="Channels", value=channels_str, inline=True)
-        await interaction.response.send_message(embed=embed)
+        await interaction.response.send_message(embed=embed, ephemeral=True)
 
 
 async def setup(bot: LoobiBot):
