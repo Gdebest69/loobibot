@@ -50,15 +50,31 @@ class GetPlainTextCommand(commands.Cog):
             if len(message.content) > 0
             else []
         ) + embed_files
-        if len(files) == 0:
-            await interaction.response.send_message(
-                "Message content is empty", ephemeral=True
+
+        if message.stickers:
+            sticker_list_message = "\n".join(
+                [sticker.url for sticker in message.stickers]
             )
+        else:
+            sticker_list_message = None
+
+        if len(files) == 0:
+            if sticker_list_message is None:
+                await interaction.response.send_message(
+                    "Message content is empty", ephemeral=True
+                )
+            else:
+                await interaction.response.send_message(
+                    sticker_list_message, ephemeral=True
+                )
         elif len(files) <= 10:
-            await interaction.response.send_message(files=files, ephemeral=True)
+            await interaction.response.send_message(
+                sticker_list_message, files=files, ephemeral=True
+            )
         else:
             view = LastEmbedView(message.embeds[9])
             await interaction.response.send_message(
+                sticker_list_message,
                 files=files[:10],
                 ephemeral=True,
                 view=view,
