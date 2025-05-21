@@ -29,6 +29,7 @@ class HelpCommand(commands.Cog):
     @app_commands.allowed_installs(guilds=True, users=True)
     @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
     async def help_command(self, interaction: discord.Interaction, command: str = None):
+        ephemeral = not interaction.is_guild_integration()
         if command is None:
             embed = discord.Embed(
                 color=EMBED_COLOR, title=f"{self.bot.user.name} commands"
@@ -40,8 +41,9 @@ class HelpCommand(commands.Cog):
             if is_in_guild(interaction):
                 guild_command_list = [
                     f"`/{cmd.qualified_name}`"
-                    for cmd in self.bot.tree.get_commands(guild=interaction.guild)
-                    if not isinstance(cmd, app_commands.ContextMenu)
+                    for cmd in self.bot.tree.get_commands(
+                        guild=interaction.guild, type=discord.AppCommandType.chat_input
+                    )
                 ]
                 if guild_command_list:
                     embed.add_field(
@@ -51,9 +53,10 @@ class HelpCommand(commands.Cog):
                     )
             global_command_list = [
                 f"`/{cmd.qualified_name}`"
-                for cmd in self.bot.tree.get_commands()
-                if not isinstance(cmd, app_commands.ContextMenu)
-                and is_guild_installed(cmd)
+                for cmd in self.bot.tree.get_commands(
+                    type=discord.AppCommandType.chat_input
+                )
+                if is_guild_installed(cmd)
             ]
             if global_command_list:
                 embed.add_field(
@@ -63,9 +66,10 @@ class HelpCommand(commands.Cog):
                 )
             user_command_list = [
                 f"`/{cmd.qualified_name}`"
-                for cmd in self.bot.tree.get_commands()
-                if not isinstance(cmd, app_commands.ContextMenu)
-                and is_user_installed(cmd)
+                for cmd in self.bot.tree.get_commands(
+                    type=discord.AppCommandType.chat_input
+                )
+                if is_user_installed(cmd)
             ]
             if user_command_list:
                 embed.add_field(
@@ -75,7 +79,7 @@ class HelpCommand(commands.Cog):
                 )
             await interaction.response.send_message(
                 embed=embed,
-                ephemeral=True,
+                ephemeral=ephemeral,
             )
         else:
             cmd = discord.utils.get(
@@ -139,13 +143,13 @@ class HelpCommand(commands.Cog):
                 if base_command.allowed_contexts.dm_channel:
                     allowed_contexts.append("DM channel")
                 if base_command.allowed_contexts.private_channel:
-                    allowed_contexts.append("group chat")
+                    allowed_contexts.append("DM or a GDM channel")
                 embed.add_field(
                     name="Allowed contexts",
                     value=", ".join(allowed_contexts),
                     inline=False,
                 )
-            await interaction.response.send_message(embed=embed, ephemeral=True)
+            await interaction.response.send_message(embed=embed, ephemeral=ephemeral)
 
 
 async def setup(bot: LoobiBot):
