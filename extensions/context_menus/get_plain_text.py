@@ -4,9 +4,10 @@ from main import *
 
 
 class LastEmbedView(discord.ui.View):
-    def __init__(self, last_embed: discord.Embed):
+    def __init__(self, last_embed: discord.Embed, original_message: discord.Message):
         super().__init__(timeout=TIMEOUT)
         self.embed = last_embed
+        self.original_message = original_message
         self.message: discord.Message = None
 
     @discord.ui.button(label="View last embed", style=discord.ButtonStyle.green)
@@ -14,7 +15,7 @@ class LastEmbedView(discord.ui.View):
         await interaction.response.send_message(
             file=discord.File(
                 StringIO(json.dumps(self.embed.to_dict(), indent=4)),
-                filename="embed9.json",
+                filename=f"embed9_{self.original_message.id}.json",
             ),
             ephemeral=True,
         )
@@ -41,12 +42,12 @@ class GetPlainTextCommand(commands.Cog):
         embed_files = [
             discord.File(
                 StringIO(json.dumps(embed.to_dict(), indent=4)),
-                filename=f"embed{i}.json",
+                filename=f"embed{i}_{message.id}.json",
             )
             for i, embed in enumerate(message.embeds)
         ]
         files = (
-            [discord.File(StringIO(message.content), filename="message.txt")]
+            [discord.File(StringIO(message.content), filename=f"message_{message.id}.txt")]
             if len(message.content) > 0
             else []
         ) + embed_files
@@ -72,7 +73,7 @@ class GetPlainTextCommand(commands.Cog):
                 sticker_list_message, files=files, ephemeral=True
             )
         else:
-            view = LastEmbedView(message.embeds[9])
+            view = LastEmbedView(message.embeds[9], message)
             await interaction.response.send_message(
                 sticker_list_message,
                 files=files[:10],
