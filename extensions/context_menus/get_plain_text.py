@@ -1,5 +1,6 @@
 import json
 from io import StringIO
+from asyncio import create_task
 from main import *
 
 
@@ -39,6 +40,7 @@ class GetPlainTextCommand(commands.Cog):
     async def get_plain_text(
         self, interaction: discord.Interaction, message: discord.Message
     ):
+        thinking_task = create_task(interaction.response.defer(ephemeral=True))
         embed_files = [
             discord.File(
                 StringIO(json.dumps(embed.to_dict(), indent=4)),
@@ -47,7 +49,11 @@ class GetPlainTextCommand(commands.Cog):
             for i, embed in enumerate(message.embeds)
         ]
         files = (
-            [discord.File(StringIO(message.content), filename=f"message_{message.id}.txt")]
+            [
+                discord.File(
+                    StringIO(message.content), filename=f"message_{message.id}.txt"
+                )
+            ]
             if len(message.content) > 0
             else []
         ) + embed_files
@@ -59,26 +65,22 @@ class GetPlainTextCommand(commands.Cog):
         else:
             sticker_list_message = None
 
+        await thinking_task
         if len(files) == 0:
             if sticker_list_message is None:
-                await interaction.response.send_message(
-                    "Message content is empty", ephemeral=True
+                await interaction.edit_original_response(
+                    content="Message content is empty"
                 )
             else:
-                await interaction.response.send_message(
-                    sticker_list_message, ephemeral=True
-                )
+                await interaction.edit_original_response(content=sticker_list_message)
         elif len(files) <= 10:
-            await interaction.response.send_message(
-                sticker_list_message, files=files, ephemeral=True
+            await interaction.edit_original_response(
+                content=sticker_list_message, attachments=files
             )
         else:
             view = LastEmbedView(message.embeds[9], message)
-            await interaction.response.send_message(
-                sticker_list_message,
-                files=files[:10],
-                ephemeral=True,
-                view=view,
+            await interaction.edit_original_response(
+                content=sticker_list_message, attachments=files[:10], view=view
             )
             view.message = await interaction.original_response()
 
