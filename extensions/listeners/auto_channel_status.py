@@ -71,7 +71,7 @@ class AutoChannelStatus(commands.Cog):
             if status == channel.status:
                 return
             try:
-                await channel.edit(status=status, reason="Games status")
+                await channel.edit(status=status, reason="Activity status")
             except discord.errors.DiscordServerError:
                 pass
             except discord.Forbidden:
