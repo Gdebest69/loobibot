@@ -21,12 +21,17 @@ class GetAvatarUrlCommand(commands.Cog):
         if user_avatar != user.display_avatar:
             message += "\n" + user_avatar.url
         if user.avatar_decoration is not None:
-            message += (
-                "\n"
-                + user.avatar_decoration.url
-                + f"\nConvert avatar decoration to gif: {self.avatar_decoration_to_gif_prefix_url}{user.avatar_decoration.url}"
+            convert_avatar_decoration_to_gif_button = discord.ui.Button(
+                label="Convert avatar decoration to gif",
+                url=self.avatar_decoration_to_gif_prefix_url
+                + user.avatar_decoration.url,
             )
-        await interaction.response.send_message(message, ephemeral=True)
+            view = discord.ui.View(timeout=None)
+            view.add_item(convert_avatar_decoration_to_gif_button)
+            message += "\n" + user.avatar_decoration.url
+            await interaction.response.send_message(message, view=view, ephemeral=True)
+        else:
+            await interaction.response.send_message(message, ephemeral=True)
 
 
 async def setup(bot: LoobiBot):
