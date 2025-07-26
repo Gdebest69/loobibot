@@ -71,7 +71,7 @@ class MinecraftServerCommand(commands.Cog):
     async def minecraft_server_command(
         self, interaction: discord.Interaction, ip: str, server_type: str = "both"
     ):
-        await interaction.response.defer(ephemeral=True)
+        thinking_task = asyncio.create_task(interaction.response.defer(ephemeral=True))
         try:
             if server_type == "Java":
                 status = await handle_java(ip)
@@ -94,29 +94,30 @@ class MinecraftServerCommand(commands.Cog):
                 status = success_task.result()
                 server_type = success_task.get_name()
             else:
+                await thinking_task
                 await interaction.edit_original_response(
                     content=f"Invalid server type: {server_type}"
                 )
                 return
         except ValueError:  # invalid port
+            await thinking_task
             await interaction.edit_original_response(content="Invalid port")
             return
         except gaierror:  # invalid ip address
-            await interaction.edit_original_response(content="Invalid Address")
+            await thinking_task
+            await interaction.edit_original_response(content="Invalid address")
+            return
+        except (TimeoutError, ConnectionRefusedError, OSError) as e:
+            embed = discord.Embed(
+                color=self.offline_color,
+                title=ip,
+                description="Offline",
+            )
+            await thinking_task
+            await interaction.edit_original_response(embed=embed)
             return
         except Exception as e:
-            if (
-                isinstance(e, TimeoutError)
-                or isinstance(e, ConnectionRefusedError)
-                or isinstance(e, OSError)
-            ):
-                embed = discord.Embed(
-                    color=self.offline_color,
-                    title=ip,
-                    description="Offline",
-                )
-                await interaction.edit_original_response(embed=embed)
-                return
+            await thinking_task
             await interaction.edit_original_response(
                 content=f"Something went wrong when trying to check the status of {ip},"
                 + f" if this problem continues, please report it to {mention_user(OWNER_ID)}"
@@ -152,6 +153,7 @@ class MinecraftServerCommand(commands.Cog):
             embed.set_thumbnail(url="attachment://server_icon.png")
         else:
             attachments = []
+        await thinking_task
         await interaction.edit_original_response(embed=embed, attachments=attachments)
 
 
