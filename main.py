@@ -108,7 +108,6 @@ class LoobiBot(commands.Bot):
 
         self.__guilds_data: dict[int, GuildData] = {}
         self.__users_data: dict[int, UserData] = {}
-        self.vacation: bool = False
         self.tree.interaction_check = self.interaction_check
         self.testing = "-test" in sys.argv
         self.load_data()
@@ -128,7 +127,6 @@ class LoobiBot(commands.Bot):
                 data: dict = pickle.load(file)
                 self.__guilds_data = data["guilds"]
                 self.__users_data = data["users"]
-                self.vacation = data["vacation"]
                 self.server_list_message = data.get("server_list_message", (0, 0))
         except Exception as e:
             if not isinstance(e, FileNotFoundError):
@@ -139,7 +137,6 @@ class LoobiBot(commands.Bot):
             self.logger.warning("Using empty data")
             self.__guilds_data = {}
             self.__users_data = {}
-            self.vacation = False
             self.server_list_message = (0, 0)
 
     def save_data(self):
@@ -148,7 +145,6 @@ class LoobiBot(commands.Bot):
                 {
                     "guilds": self.__guilds_data,
                     "users": self.__users_data,
-                    "vacation": self.vacation,
                     "server_list_message": self.server_list_message,
                 },
                 file,

@@ -6,17 +6,6 @@ from main import *
 class DebugCommands(commands.Cog):
     def __init__(self, bot: LoobiBot):
         self.bot = bot
-        # WOL
-        self.mac_address = "40:23:43:44:3f:6f"
-        self.ip_address = "10.100.102.15"
-        self.devices = {
-            "my_pc": {"mac": self.mac_address, "ip_address": self.ip_address}
-        }
-
-    def wake_device(self, device_name):
-        if device_name in self.devices:
-            mac, ip = self.devices[device_name].values()
-            send_magic_packet(mac, ip_address=ip)
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
@@ -25,14 +14,6 @@ class DebugCommands(commands.Cog):
 
         # debug
         if message.author.id == OWNER_ID:
-            # toggle vacation mode
-            if message.content == "/toggle vacation":
-                self.bot.vacation = not self.bot.vacation
-                await message.reply(
-                    f"Vacation mode is now set to {self.bot.vacation}",
-                    mention_author=False,
-                )
-
             # shut down bot
             if message.content == "/shutdown":
                 self.bot.save_data()
@@ -94,11 +75,6 @@ class DebugCommands(commands.Cog):
                 await message.reply(
                     f"{ip}\n{dashboard}\n{web_server}", mention_author=False
                 )
-
-            # WOL command
-            if message.content == "/wol":
-                self.wake_device("my_pc")
-                await message.reply("Successfully woke up the PC", mention_author=False)
 
     @commands.command(name="eval")
     async def eval_command(self, ctx: commands.Context, *, eval_str: str):
