@@ -1,3 +1,4 @@
+from asyncio import create_task
 from main import *
 
 
@@ -10,6 +11,9 @@ class PrivateChannelCommand(
 ):
     def __init__(self, bot: LoobiBot):
         self.bot = bot
+        self.private_channel_creations: dict[int, set[int]] = (
+            {}
+        )  # caching users that are in the process of creating a private channel per guild
 
     async def interaction_check(self, interaction):
         # channel check
@@ -22,6 +26,23 @@ class PrivateChannelCommand(
         if isinstance(error, app_commands.CheckFailure):
             return
         return await super().cog_app_command_error(interaction, error)
+
+    def is_creating_private_channel(self, user_id: int, guild_id: int) -> bool:
+        return (
+            guild_id in self.private_channel_creations
+            and user_id in self.private_channel_creations[guild_id]
+        )
+
+    def add_creating_private_channel(self, user_id: int, guild_id: int):
+        if guild_id not in self.private_channel_creations:
+            self.private_channel_creations[guild_id] = set()
+        self.private_channel_creations[guild_id].add(user_id)
+
+    def remove_creating_private_channel(self, user_id: int, guild_id: int):
+        if guild_id in self.private_channel_creations:
+            self.private_channel_creations[guild_id].discard(user_id)
+            if not self.private_channel_creations[guild_id]:
+                del self.private_channel_creations[guild_id]
 
     @app_commands.command(name="create", description="Create a private channel")
     @app_commands.choices(
@@ -49,18 +70,16 @@ class PrivateChannelCommand(
             return
 
         # private channel check
+        if self.is_creating_private_channel(interaction.user.id, interaction.guild_id):
+            await interaction.response.send_message(
+                "You are already in the process of creating a private channel",
+                ephemeral=True,
+            )
+            return
         private_channels = self.bot.get_guild_data(
             interaction.guild_id
         ).private_channels
         if interaction.user.id in private_channels:
-            if (
-                private_channels[interaction.user.id] == 0
-            ):  # the user is currently making a private channel
-                await interaction.response.send_message(
-                    "You are already in the process of making a private channel",
-                    ephemeral=True,
-                )
-                return
             channel = self.bot.get_channel(private_channels[interaction.user.id])
             if channel is not None:
                 await interaction.response.send_message(
@@ -69,8 +88,9 @@ class PrivateChannelCommand(
                 )
                 return
 
-        private_channels[interaction.user.id] = 0
-        await interaction.response.defer(ephemeral=True)
+        # create private channel
+        self.add_creating_private_channel(interaction.user.id, interaction.guild_id)
+        thinking_task = create_task(interaction.response.defer(ephemeral=True))
         private_channels_category_id = self.bot.get_guild_data(
             interaction.guild_id
         ).private_channels_category_id
@@ -93,17 +113,27 @@ class PrivateChannelCommand(
                     name, category=category, overwrites=overwrites
                 )
             else:
+                await thinking_task
                 await interaction.edit_original_response(
                     content=f"Invalid channel type: {channel_type.value}"
                 )
-                private_channels[interaction.user.id] = -1
+                self.remove_creating_private_channel(
+                    interaction.user.id, interaction.guild_id
+                )
                 return
             private_channels[interaction.user.id] = channel.id
+            self.remove_creating_private_channel(
+                interaction.user.id, interaction.guild_id
+            )
+            await thinking_task
             await interaction.edit_original_response(
                 content=f"Successfully created your private channel - {channel.mention}"
             )
         except Exception as e:
-            private_channels[interaction.user.id] = -1
+            self.remove_creating_private_channel(
+                interaction.user.id, interaction.guild_id
+            )
+            await thinking_task
             if isinstance(e, discord.Forbidden):
                 await interaction.edit_original_response(
                     content="Sorry, but I can't create a private channel due to lack of permissions in this server",
@@ -127,14 +157,16 @@ class PrivateChannelCommand(
                     "You don't have any private channel to delete", ephemeral=True
                 )
             else:
-                await interaction.response.defer(ephemeral=True)
+                thinking_task = create_task(interaction.response.defer(ephemeral=True))
                 try:
                     await channel.delete()
+                    await thinking_task
                     if self.bot.get_channel(interaction.channel.id) is not None:
                         await interaction.edit_original_response(
                             content="Successfully deleted your private channel"
                         )
                 except Exception as e:
+                    await thinking_task
                     if isinstance(e, discord.Forbidden):
                         await interaction.edit_original_response(
                             content="Sorry, but I can't delete your private channel due to lack of permissions in this server",
@@ -165,16 +197,18 @@ class PrivateChannelCommand(
                     "You don't have any private channel to redeem", ephemeral=True
                 )
             else:
-                await interaction.response.defer(ephemeral=True)
+                thinking_task = create_task(interaction.response.defer(ephemeral=True))
                 try:
                     await channel.set_permissions(
                         interaction.user,
                         **{perm: value for perm, value in discord.Permissions.all()},
                     )
+                    await thinking_task
                     await interaction.edit_original_response(
                         content="Successfully redeemed your private channel"
                     )
                 except Exception as e:
+                    await thinking_task
                     if isinstance(e, discord.Forbidden):
                         await interaction.edit_original_response(
                             content="Sorry, but I can't redeem your private channel due to lack of permissions in this server",
