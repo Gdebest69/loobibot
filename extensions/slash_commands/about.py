@@ -33,6 +33,8 @@ class AboutCommand(commands.Cog):
             run(["git", "log", "-1", "--format=%cd", "--date=iso-strict"])
         )
         loobi_bot_version = f"Current commit hash: `{commit_hash}`\nPublished on: {discord.utils.format_dt(publish_date, style='f')}"
+        if self.bot.testing:
+            loobi_bot_version += "\n**The bot is in testing mode**"
 
         return {
             "Python version": python_version,
