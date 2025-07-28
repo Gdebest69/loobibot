@@ -16,8 +16,8 @@ class AboutCommand(commands.Cog):
                     .strip()
                 )
             except Exception as e:
-                self.bot.logger.warning(e)
-                return "Unavailable"
+                self.bot.logger.warning(f"Failed to run command {cmd}: {e}")
+                return None
 
         # Python version
         python_version_info = sys.version_info
@@ -29,10 +29,19 @@ class AboutCommand(commands.Cog):
 
         # loobi bot version
         commit_hash = run(["git", "rev-parse", "HEAD"])
-        publish_date = datetime.datetime.fromisoformat(
-            run(["git", "log", "-1", "--format=%cd", "--date=iso-strict"])
+        if commit_hash is None:
+            commit_hash = "Unavailable"
+        publish_date = run(["git", "log", "-1", "--format=%cd", "--date=iso-strict"])
+        if publish_date is None:
+            publish_date = "Unavailable"
+        else:
+            publish_date = discord.utils.format_dt(
+                datetime.datetime.fromisoformat(publish_date), style="f"
+            )
+
+        loobi_bot_version = (
+            f"Current commit hash: `{commit_hash}`\nPublished on: {publish_date}"
         )
-        loobi_bot_version = f"Current commit hash: `{commit_hash}`\nPublished on: {discord.utils.format_dt(publish_date, style='f')}"
         if self.bot.testing:
             loobi_bot_version += "\n**The bot is in testing mode**"
 
