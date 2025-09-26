@@ -17,11 +17,14 @@ class ImageLayer:
     def from_bytes(
         image_bytes: bytes,
         position: tuple[int, int],
+        size: tuple[int, int] = None,
         circle: bool = False,
         remove_transparency: bool = False,
         convertion_mode: str = "RGBA",
     ):
         image = Image.open(BytesIO(image_bytes)).convert(convertion_mode)
+        if size is not None:
+            image = image.resize(size, Image.LANCZOS)
         if remove_transparency:
             image = ImageLayer._remove_transparency(image)
         if circle:
@@ -31,12 +34,11 @@ class ImageLayer:
     @staticmethod
     def _make_circle(image: Image.Image) -> Image.Image:
         """Crops an image into a circular shape."""
-        size = (min(image.size),) * 2
+        size = image.size
         mask = Image.new("L", size, 0)
         draw = ImageDraw.Draw(mask)
         draw.ellipse((0, 0) + size, fill=255)
 
-        image = image.resize(size, Image.LANCZOS)
         circular_image = Image.new("RGBA", size, (0, 0, 0, 0))
         circular_image.paste(image, mask=mask)
         return circular_image
@@ -48,13 +50,9 @@ class ImageLayer:
         new_image.paste(image, mask=image)
         return new_image
 
-    def append_layer(self, layer: "ImageLayer", new_size: tuple[int, int] = None):
-        """Appends another ImageLayer onto this image at its position, resizing it to the given pixel dimensions."""
-        if new_size:
-            resized_image = layer.image.resize(new_size, Image.LANCZOS)
-        else:
-            resized_image = layer.image
-        self.image.paste(resized_image, layer.position, mask=resized_image)
+    def append_layer(self, layer: "ImageLayer"):
+        """Appends another ImageLayer onto this image at its position."""
+        self.image.paste(layer.image, layer.position, mask=layer.image)
 
     def to_discord_file(self, filename: str = "image.png") -> discord.File:
         """Returns the image layer as a Discord file."""
@@ -105,9 +103,12 @@ class MemeCommand(
             base = self.lowtaperfade_base.copy()
             base.append_layer(
                 ImageLayer.from_bytes(
-                    avatar_bytes, (47, 80), circle=True, remove_transparency=True
-                ),
-                (190, 190),
+                    avatar_bytes,
+                    position=(47, 80),
+                    size=(190, 190),
+                    circle=True,
+                    remove_transparency=True,
+                )
             )
             base.append_layer(self.ninja_hair)
             return base.to_discord_file(
@@ -137,12 +138,12 @@ class MemeCommand(
             base.append_layer(
                 ImageLayer.from_bytes(
                     avatar_bytes,
-                    (310, 41),
+                    position=(310, 41),
+                    size=(330, 330),
                     circle=True,
                     remove_transparency=True,
                     convertion_mode="LA",  # Grayscale
-                ),
-                (330, 330),
+                )
             )
             return base.to_discord_file(f"Absolute {user.display_name}.png")
 
