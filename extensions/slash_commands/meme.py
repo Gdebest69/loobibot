@@ -1,6 +1,6 @@
 from PIL import Image, ImageDraw
 from io import BytesIO
-from asyncio import to_thread
+from asyncio import to_thread, create_task
 from main import *
 
 
@@ -19,8 +19,9 @@ class ImageLayer:
         position: tuple[int, int],
         circle: bool = False,
         remove_transparency: bool = False,
+        convertion_mode: str = "RGBA",
     ):
-        image = Image.open(BytesIO(image_bytes)).convert("RGBA")
+        image = Image.open(BytesIO(image_bytes)).convert(convertion_mode)
         if remove_transparency:
             image = ImageLayer._remove_transparency(image)
         if circle:
@@ -82,6 +83,9 @@ class MemeCommand(
         self.ninja_hair = ImageLayer.from_file(
             in_folder(os.path.join("assets", "memes", "ninja_hair.png")), (0, 0)
         )
+        self.absolute_cinema_base = ImageLayer.from_file(
+            in_folder(os.path.join("assets", "memes", "absolute_cinema.png")), (0, 0)
+        )
 
     @app_commands.command(
         name="lowtaperfade",
@@ -94,7 +98,7 @@ class MemeCommand(
         if user is None:
             user = interaction.user
 
-        await interaction.response.defer()
+        thinking_task = create_task(interaction.response.defer())
         avatar_bytes = await user.display_avatar.read()
 
         def generate_image():
@@ -110,9 +114,41 @@ class MemeCommand(
                 f"Imagine if {user.display_name} had a low taper fade.png"
             )
 
-        await interaction.edit_original_response(
-            attachments=[await to_thread(generate_image)]
-        )
+        attachment = await to_thread(generate_image)
+        await thinking_task
+        await interaction.edit_original_response(attachments=[attachment])
+
+    @app_commands.command(
+        name="absolute-cinema",
+        description="Makes a user's avatar look like the absolute cinema meme",
+    )
+    @app_commands.describe(user="The user to use for the meme")
+    async def meme_absolute_cinema(
+        self, interaction: discord.Interaction, user: discord.User = None
+    ):
+        if user is None:
+            user = interaction.user
+
+        thinking_task = create_task(interaction.response.defer())
+        avatar_bytes = await user.display_avatar.read()
+
+        def generate_image():
+            base = self.absolute_cinema_base.copy()
+            base.append_layer(
+                ImageLayer.from_bytes(
+                    avatar_bytes,
+                    (310, 41),
+                    circle=True,
+                    remove_transparency=True,
+                    convertion_mode="LA",  # Grayscale
+                ),
+                (330, 330),
+            )
+            return base.to_discord_file(f"Absolute {user.display_name}.png")
+
+        attachment = await to_thread(generate_image)
+        await thinking_task
+        await interaction.edit_original_response(attachments=[attachment])
 
 
 async def setup(bot: LoobiBot):
