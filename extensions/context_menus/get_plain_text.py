@@ -1,29 +1,8 @@
 import json
-from io import StringIO
+from io import StringIO, BytesIO
 from asyncio import create_task
+from zipfile import ZipFile
 from main import *
-
-
-class LastEmbedView(discord.ui.View):
-    def __init__(self, last_embed: discord.Embed, original_message: discord.Message):
-        super().__init__(timeout=TIMEOUT)
-        self.embed = last_embed
-        self.original_message = original_message
-        self.message: discord.Message = None
-
-    @discord.ui.button(label="View last embed", style=discord.ButtonStyle.green)
-    async def send_last_embed(self, interaction: discord.Interaction, button):
-        await interaction.response.send_message(
-            file=discord.File(
-                StringIO(json.dumps(self.embed.to_dict(), indent=4)),
-                filename=f"embed9_{self.original_message.id}.json",
-            ),
-            ephemeral=True,
-        )
-
-    async def on_timeout(self):
-        if self.message is not None:
-            await self.message.edit(view=None)
 
 
 class GetPlainTextCommand(commands.Cog):
@@ -66,23 +45,23 @@ class GetPlainTextCommand(commands.Cog):
             sticker_list_message = None
 
         await thinking_task
-        if len(files) == 0:
-            if sticker_list_message is None:
-                await interaction.edit_original_response(
-                    content="Message content is empty"
-                )
-            else:
-                await interaction.edit_original_response(content=sticker_list_message)
+        if len(files) == 0 and sticker_list_message is None:
+            await interaction.edit_original_response(content="Message content is empty")
         elif len(files) <= 10:
             await interaction.edit_original_response(
                 content=sticker_list_message, attachments=files
             )
         else:
-            view = LastEmbedView(message.embeds[9], message)
+            # Create a zip file with all the files beacause discord only allows 10 attachments per message
+            zip_buffer = BytesIO()
+            with ZipFile(zip_buffer, "x") as zip_file:
+                for discord_file in files:
+                    zip_file.writestr(discord_file.filename, discord_file.fp.read())
+            zip_buffer.seek(0)
+            zip_file = discord.File(zip_buffer, filename=f"{message.id}.zip")
             await interaction.edit_original_response(
-                content=sticker_list_message, attachments=files[:10], view=view
+                content=sticker_list_message, attachments=[zip_file]
             )
-            view.message = await interaction.original_response()
 
 
 async def setup(bot: LoobiBot):
