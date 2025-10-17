@@ -39,7 +39,11 @@ class FunStuff(commands.Cog):
             await message.reply(f"Just like yeshua")
         elif plain_message(message.content).lower() == "hella gay":
             await message.reply(f"Totally Yeshua")
-        elif plain_message(message.content).lower() == "furry":
+        elif (
+            message.guild is not None
+            and message.guild.id == 1402014458855035002
+            and plain_message(message.content).lower() == "furry"
+        ):
             await message.reply(
                 file=discord.File(in_folder(os.path.join("assets", "furry.png")))
             )
