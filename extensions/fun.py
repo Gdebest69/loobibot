@@ -39,6 +39,10 @@ class FunStuff(commands.Cog):
             await message.reply(f"Just like yeshua")
         elif plain_message(message.content).lower() == "hella gay":
             await message.reply(f"Totally Yeshua")
+        elif plain_message(message.content).lower() == "furry":
+            await message.reply(
+                file=discord.File(in_folder(os.path.join("assets", "furry.png")))
+            )
 
 
 async def setup(bot: LoobiBot):
