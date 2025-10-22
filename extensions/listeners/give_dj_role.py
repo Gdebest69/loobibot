@@ -1,4 +1,36 @@
+from discord import ui
+from views.settings_view import SettingsView, ManageRolesSelect
 from main import *
+
+
+class DJRolesSettingsView(SettingsView):
+    def __init__(self, bot: LoobiBot, guild: discord.Guild, back_view_factory):
+        super().__init__()
+        container = ui.Container()
+        container.add_item(ui.TextDisplay("# DJ Roles settings"))
+        container.add_item(
+            ui.Separator(visible=False, spacing=discord.SeparatorSpacing.large)
+        )
+        container.add_item(ui.TextDisplay("Roles required to get the DJ role"))
+        container.add_item(
+            ManageRolesSelect(
+                bot.get_guild_data(guild.id).dj_roles_id, "Select required roles"
+            )
+        )
+        container.add_item(ui.Separator())
+        dj_role = bot.music.get_dj_role(guild)
+        container.add_item(
+            ui.TextDisplay(
+                f"DJ role: {dj_role.mention if dj_role is not None else str(None)}"
+            )
+        )
+        container.add_item(
+            ui.TextDisplay(
+                f"You can change the DJ role using: {bot.music.prefix}setdj <rolename|NONE>"
+            )
+        )
+        self.add_item(container)
+        self.add_back_button(back_view_factory)
 
 
 class GiveDJRole(commands.Cog):
