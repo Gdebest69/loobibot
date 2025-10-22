@@ -1,5 +1,90 @@
 from asyncio import create_task
+from discord import ui, ButtonStyle
+from views.settings_view import SettingsView, ManageRolesSelect
 from main import *
+
+
+class PrivateChannelsCategorySelect(ui.ActionRow["PrivateChannelSettingsView"]):
+    def __init__(self, bot: LoobiBot, guild: discord.Guild):
+        super().__init__()
+        self.bot = bot
+        self.guild = guild
+        self.set_default_value()
+
+    def set_default_value(self):
+        guild_data = self.bot.get_guild_data(self.guild.id)
+        category_id = guild_data.private_channels_category_id
+        category = self.guild.get_channel(category_id)
+        self.select_category.default_values = [category] if category is not None else []
+
+    @ui.select(
+        placeholder="No category selected",
+        channel_types=[discord.ChannelType.category],
+        min_values=0,
+        max_values=1,
+        cls=ui.ChannelSelect,
+    )
+    async def select_category(
+        self,
+        interaction: discord.Interaction,
+        select: ui.ChannelSelect,
+    ):
+        category_id = select.values[0].id if select.values else 0
+        guild_data = self.bot.get_guild_data(self.guild.id)
+        guild_data.private_channels_category_id = category_id
+        self.set_default_value()
+        await interaction.response.edit_message(view=self.view)
+
+
+class MovePrivateChannelsButton(ui.ActionRow["PrivateChannelSettingsView"]):
+    def __init__(self, bot: LoobiBot, guild: discord.Guild):
+        super().__init__()
+        self.bot = bot
+        self.guild = guild
+
+    @ui.button(
+        label="Move all private channels to the category", style=ButtonStyle.blurple
+    )
+    async def move_private_channels(
+        self, interaction: discord.Interaction, button: ui.Button
+    ):
+        create_task(interaction.response.defer())
+        guild_data = self.bot.get_guild_data(self.guild.id)
+        category = self.guild.get_channel(guild_data.private_channels_category_id)
+        for channel_id in guild_data.private_channels.values():
+            channel = self.guild.get_channel(channel_id)
+            if channel is not None and channel.category != category:
+                try:
+                    await channel.move(
+                        category=category,
+                        end=True,
+                        reason="Moving private channels to the category",
+                    )
+                except discord.Forbidden:
+                    pass
+
+
+class PrivateChannelSettingsView(SettingsView):
+    def __init__(self, bot: LoobiBot, guild: discord.Guild, back_view_factory):
+        super().__init__()
+        container = ui.Container()
+        container.add_item(ui.TextDisplay("# Private channels settings"))
+        container.add_item(
+            ui.Separator(visible=False, spacing=discord.SeparatorSpacing.large)
+        )
+        container.add_item(ui.TextDisplay("Required roles"))
+        container.add_item(
+            ManageRolesSelect(
+                bot.get_guild_data(guild.id).private_channel_roles_id,
+                "Select required roles",
+            )
+        )
+        container.add_item(ui.Separator())
+        container.add_item(ui.TextDisplay("Private channels category"))
+        container.add_item(PrivateChannelsCategorySelect(bot, guild))
+        container.add_item(MovePrivateChannelsButton(bot, guild))
+        self.add_item(container)
+        self.add_back_button(back_view_factory)
 
 
 @app_commands.guild_only()

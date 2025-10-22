@@ -1,5 +1,6 @@
 from discord.ui import Button, RoleSelect, View, TextInput, Modal, Select, ChannelSelect
 from discord import ButtonStyle, TextStyle
+from extensions.slash_commands.private_channel import PrivateChannelSettingsView
 from main import *
 
 
@@ -739,99 +740,64 @@ class AutoRolesFeatureView(View):
         return True
 
 
-@app_commands.guild_only()
-@app_commands.allowed_installs(guilds=True, users=False)
-@app_commands.default_permissions()
-class SettingsCommand(
-    commands.GroupCog, name="settings", description="Change my settings for this guild"
-):
+from views.settings_view import SettingsView
+from discord import ui
+
+
+class MainSettingsView(SettingsView):
+    def __init__(self, bot: LoobiBot, guild: discord.Guild):
+        super().__init__()
+        self.bot = bot
+        self.guild = guild
+
+        container = ui.Container()
+        container.add_item(ui.TextDisplay("# Loobi Bot server settings"))
+        container.add_item(
+            ui.Separator(visible=False, spacing=discord.SeparatorSpacing.large)
+        )
+
+        manage_private_channels_button = ui.Button(
+            label="Manage", style=ButtonStyle.gray
+        )
+        manage_private_channels_button.callback = self.manage_private_channels
+        container.add_item(
+            ui.Section(
+                "Private channels settings", accessory=manage_private_channels_button
+            )
+        )
+
+        self.add_item(container)
+
+    async def manage_private_channels(self, interaction: discord.Interaction):
+        self.stop()
+        view = PrivateChannelSettingsView(
+            self.bot, self.guild, lambda: MainSettingsView(self.bot, self.guild)
+        )
+        await interaction.response.edit_message(view=view)
+        view.set_message(self.message)
+
+
+class SettingsCommand(commands.Cog):
     def __init__(self, bot: LoobiBot):
         self.bot = bot
 
-    async def interaction_check(self, interaction: discord.Interaction):
-        # channel check
-        if not is_in_guild(interaction):
-            await must_use_in_guild(interaction)
-            return False
-
-        # permission check
+    @app_commands.command(
+        name="settings", description="Change my settings for this guild"
+    )
+    @app_commands.guild_only()
+    @app_commands.allowed_installs(guilds=True, users=False)
+    @app_commands.default_permissions()
+    async def settings_command(self, interaction: discord.Interaction):
         if not interaction.user.guild_permissions.administrator:
             await interaction.response.send_message(
                 "You must have administrator permissions to use this command",
                 ephemeral=True,
             )
-            return False
-
-        return True
-
-    async def cog_app_command_error(self, interaction, error):
-        if isinstance(error, app_commands.CheckFailure):
             return
-        return await super().cog_app_command_error(interaction, error)
 
-    @app_commands.command(
-        name="private-channel-roles",
-        description="Roles required to create a private channel",
-    )
-    async def settings_private_channel_roles(self, interaction: discord.Interaction):
-        await ManageRolesView(
-            self.bot, "private_channel_roles_id", "Private channel roles"
-        ).send_message(interaction)
-
-    @app_commands.command(
-        name="dj-roles", description="Roles required to get the DJ role"
-    )
-    async def settings_dj_roles(self, interaction: discord.Interaction):
-        await ManageRolesView(
-            self.bot,
-            "dj_roles_id",
-            "DJ roles",
-            f"You can change the DJ role using: {self.bot.music.prefix}setdj <rolename|NONE>",
-        ).send_message(interaction)
-
-    @app_commands.command(
-        name="private-channels-category",
-        description="The category where the private channels are",
-    )
-    async def settings_private_channels_category(
-        self, interaction: discord.Interaction
-    ):
-        await PrivateChannelsCategoryView(self.bot).send_message(interaction)
-
-    @app_commands.command(
-        name="karma-amounts",
-        description="The amount of karma a user gets when saying gg",
-    )
-    async def settings_karma_amounts(self, interaction: discord.Interaction):
-        await KarmaAmountsView(self.bot).send_message(interaction)
-
-    @app_commands.command(
-        name="enabled-commands",
-        description="Enabled and disabled commands in this server",
-    )
-    async def settings_enabled_commands(self, interaction: discord.Interaction):
-        await CommandsView(self.bot).send_message(interaction)
-
-    @app_commands.command(
-        name="disabled-channels",
-        description="Channels that can't be used to run my commands",
-    )
-    async def settings_disabled_channels(self, interaction: discord.Interaction):
-        await ManageDisabledChannelsView(self.bot).send_message(interaction)
-
-    @app_commands.command(
-        name="game-status-channels",
-        description="Automatically update voice channel status based on members' game activity",
-    )
-    async def settings_game_status_channels(self, interaction: discord.Interaction):
-        await GameStatusChannelsView(self.bot).send_message(interaction)
-
-    @app_commands.command(
-        name="auto-roles-feature",
-        description="If a member rejoins the server, it will add the roles he had before leaving",
-    )
-    async def settings_auto_roles_feature(self, interaction: discord.Interaction):
-        await AutoRolesFeatureView(self.bot).send_message(interaction)
+        view = MainSettingsView(self.bot, interaction.guild)
+        await interaction.response.send_message(view=view, ephemeral=True)
+        view.set_message(await interaction.original_response())
 
 
 async def setup(bot: LoobiBot):
