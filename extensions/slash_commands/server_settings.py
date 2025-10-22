@@ -744,37 +744,37 @@ from views.settings_view import SettingsView
 from discord import ui
 
 
+class ManageSettingsButton(ui.Button[SettingsView]):
+    def __init__(self, view_factory):
+        super().__init__(label="Manage", style=ButtonStyle.gray)
+        self.view_factory = view_factory
+
+    async def callback(self, interaction: discord.Interaction):
+        self.view.stop()
+        view: SettingsView = self.view_factory()
+        await interaction.response.edit_message(view=view)
+        view.set_message(self.view.message)
+
+
 class MainSettingsView(SettingsView):
     def __init__(self, bot: LoobiBot, guild: discord.Guild):
         super().__init__()
-        self.bot = bot
-        self.guild = guild
-
         container = ui.Container()
         container.add_item(ui.TextDisplay("# Loobi Bot server settings"))
         container.add_item(
             ui.Separator(visible=False, spacing=discord.SeparatorSpacing.large)
         )
-
-        manage_private_channels_button = ui.Button(
-            label="Manage", style=ButtonStyle.gray
-        )
-        manage_private_channels_button.callback = self.manage_private_channels
         container.add_item(
             ui.Section(
-                "Private channels settings", accessory=manage_private_channels_button
+                "Private channels settings",
+                accessory=ManageSettingsButton(
+                    lambda: PrivateChannelSettingsView(
+                        bot, guild, lambda: MainSettingsView(bot, guild)
+                    )
+                ),
             )
         )
-
         self.add_item(container)
-
-    async def manage_private_channels(self, interaction: discord.Interaction):
-        self.stop()
-        view = PrivateChannelSettingsView(
-            self.bot, self.guild, lambda: MainSettingsView(self.bot, self.guild)
-        )
-        await interaction.response.edit_message(view=view)
-        view.set_message(self.message)
 
 
 class SettingsCommand(commands.Cog):
