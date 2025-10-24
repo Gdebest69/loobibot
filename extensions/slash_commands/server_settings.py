@@ -741,7 +741,7 @@ class AutoRolesFeatureView(View):
         return True
 
 
-from views.settings_view import SettingsView
+from components.settings_view import SettingsView
 from discord import ui
 
 

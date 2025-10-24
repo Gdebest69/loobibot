@@ -1,86 +1,69 @@
 from discord.ui import View, Button
 from discord import ButtonStyle
+from components.paged_list_action_row import PagedListActionRow
 from main import *
 
 
-class NWordListView(View):
-    def __init__(self, bot: LoobiBot, page: int):
-        super().__init__(timeout=TIMEOUT)
-        self.message = None
-        self.page = page
+class NWordListActionRow(PagedListActionRow):
+    def __init__(
+        self,
+        bot: LoobiBot,
+        guild: discord.Guild,
+        n_word_list_view: "NWordListView",
+        page: int,
+    ):
         self.bot = bot
+        self.guild = guild
+        self.n_word_list_view = n_word_list_view
+        super().__init__(
+            lambda: len(bot.get_guild_data(guild.id).n_words),
+            MAX_VALUES_PER_PAGE,
+            page,
+            ButtonStyle.blurple,
+        )
 
-        self.left_button = Button(emoji="⬅", style=ButtonStyle.blurple)
-        self.left_button.callback = self.go_left
-        self.add_item(self.left_button)
-
-        self.right_button = Button(emoji="➡", style=ButtonStyle.blurple)
-        self.right_button.callback = self.go_right
-        self.add_item(self.right_button)
-
-    async def go_left(self, interaction: discord.Interaction):
-        self.page -= 1
-        await self.send_message(interaction, edit=True)
-
-    async def go_right(self, interaction: discord.Interaction):
-        self.page += 1
-        await self.send_message(interaction, edit=True)
-
-    async def send_message(self, interaction: discord.Interaction, edit: bool = False):
-        # page check
-        last_page = (
-            len(self.bot.get_guild_data(interaction.guild_id).n_words)
-            + MAX_VALUES_PER_PAGE
-            - 1
-        ) // MAX_VALUES_PER_PAGE
-
-        if last_page < 1:
-            await interaction.response.send_message(
-                "There aren't any members who said the n-word", ephemeral=True
-            )
-            return
-
-        if not 1 <= self.page <= last_page:
-            await interaction.response.send_message(
-                f"Page number must be between 1 and {last_page}", ephemeral=True
-            )
-            return
-
-        start_index = (self.page - 1) * MAX_VALUES_PER_PAGE
-        end_index = start_index + MAX_VALUES_PER_PAGE
+    def apply_page(
+        self, start_index, stop_index, multiple_pages, page, total_items, total_pages
+    ) -> discord.Embed:
         member_list = []
         amount_list = []
         n_words = sort_dict_by_value(
-            self.bot.get_guild_data(interaction.guild_id).n_words, reverse=True
+            self.bot.get_guild_data(self.guild.id).n_words, reverse=True
         )
-        top_n_word = list(n_words.items())[start_index:end_index]
-        self.bot.get_guild_data(interaction.guild_id).n_words = n_words
-        for i in range(len(top_n_word)):
-            member_list.append(
-                f"`#{i + start_index + 1}` {mention_user(top_n_word[i][0])}"
-            )
-            amount_list.append(str(top_n_word[i][1]))
-
+        top_n_word = list(n_words.items())[start_index:stop_index]
+        self.bot.get_guild_data(self.guild.id).n_words = n_words
+        for i, (user_id, n_word_count) in enumerate(top_n_word, start_index + 1):
+            member_list.append(f"`#{i}` {mention_user(user_id)}")
+            amount_list.append(str(n_word_count))
         members_str = "\n".join(member_list)
         amounts_str = "\n".join(amount_list)
         embed = discord.Embed(color=EMBED_COLOR, title="N-word leaderboard")
         embed.add_field(name="Members", value=members_str, inline=True)
         embed.add_field(name="N-word said", value=amounts_str, inline=True)
-        embed.set_footer(text=f"Page: {self.page}/{last_page}")
+        embed.set_footer(text=f"Page: {page}/{total_pages}")
+        return embed
 
-        if self.page <= 1:
-            self.left_button.disabled = True
-        else:
-            self.left_button.disabled = False
-        if self.page >= last_page:
-            self.right_button.disabled = True
-        else:
-            self.right_button.disabled = False
+    async def responde_to_interaction(self, interaction, page_data):
+        await self.n_word_list_view.send_message(interaction, page_data, edit=True)
 
+
+class NWordListView(View):
+    def __init__(self, bot: LoobiBot, guild: discord.Guild, page: int):
+        super().__init__(timeout=TIMEOUT)
+        self.message = None
+        self.timed_out = False
+        self.action_row = NWordListActionRow(bot, guild, self, page)
+        for button in self.action_row.get_buttons():
+            self.add_item(button)
+
+    async def send_message(
+        self, interaction: discord.Interaction, embed: discord.Embed, edit: bool = False
+    ):
+        view = self if not self.timed_out else None
         if edit:
-            await interaction.response.edit_message(embed=embed, view=self)
+            await interaction.response.edit_message(embed=embed, view=view)
         else:
-            await interaction.response.send_message(embed=embed, view=self)
+            await interaction.response.send_message(embed=embed, view=view)
             self.message = await interaction.original_response()
 
     async def on_timeout(self):
@@ -89,6 +72,7 @@ class NWordListView(View):
                 await self.message.edit(view=None)
             except discord.NotFound:
                 pass
+        self.timed_out = True
 
 
 class NWordCounter(commands.Cog):
@@ -137,7 +121,8 @@ class NWordCounter(commands.Cog):
             await must_use_in_guild(interaction)
             return
 
-        await NWordListView(self.bot, page).send_message(interaction)
+        view = NWordListView(self.bot, interaction.guild, page)
+        await view.send_message(interaction, view.action_row.init_page_data)
 
 
 async def setup(bot: LoobiBot):

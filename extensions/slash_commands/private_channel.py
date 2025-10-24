@@ -1,6 +1,6 @@
 from asyncio import create_task
 from discord import ui, ButtonStyle
-from views.settings_view import SettingsView, ManageRolesSelect
+from components.settings_view import SettingsView, ManageRolesSelect
 from main import *
 
 

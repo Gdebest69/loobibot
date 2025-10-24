@@ -1,5 +1,5 @@
 from discord import ui
-from views.settings_view import SettingsView, ManageRolesSelect
+from components.settings_view import SettingsView, ManageRolesSelect
 from main import *
 
 
