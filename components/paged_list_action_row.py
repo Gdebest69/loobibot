@@ -17,14 +17,14 @@ class InvalidPageError(Exception):
         self.page = page
 
 
-class SpecificPageModal(ui.Modal, title="Go to Page"):
+class SpecificPageModal(ui.Modal, title="Go to page"):
     page_input = ui.Label(text="Page number", component=ui.TextInput())
 
     def __init__(self, action_row: "PagedListActionRow", max_page: int):
         super().__init__()
         assert isinstance(self.page_input.component, ui.TextInput)
         self.action_row = action_row
-        self.page_input.component.placeholder = str(action_row._current_page)
+        self.page_input.component.default = str(action_row._current_page)
         self.page_input.component.max_length = len(str(max_page))
 
     async def on_submit(self, interaction: discord.Interaction):
@@ -64,7 +64,6 @@ class PagedListActionRow(ui.ActionRow):
         current_page: int = 1,
         button_style: ButtonStyle = ButtonStyle.gray,
     ):
-        """Note: This calls apply_page once during initialization to set up initial page data."""
         super().__init__()
         self.list_len_func = list_len_func
         self.items_per_page = items_per_page
@@ -75,19 +74,6 @@ class PagedListActionRow(ui.ActionRow):
         self._current_page_button.style = button_style
         self._next_page_button.style = button_style
         self._last_page_button.style = button_style
-
-        total_items, total_pages, start_index, stop_index = self._get_pages_info(
-            current_page
-        )
-        self._edit_buttons_state(current_page, total_pages)
-        self.init_page_data = self.apply_page(
-            start_index,
-            stop_index,
-            total_pages > 1,
-            current_page,
-            total_items,
-            total_pages,
-        )
 
     def _get_pages_info(self, page: int) -> tuple[int, int, int, int]:
         """Returns: (total_items, total_pages, start_index, stop_index)"""
@@ -120,6 +106,23 @@ class PagedListActionRow(ui.ActionRow):
             self._next_page_button,
             self._last_page_button,
         ]
+
+    def update_page(self, new_page: int = None):
+        """A manual call to apply_page.
+        Call this once during initialization to set up initial page data."""
+        page = new_page if new_page is not None else self._current_page
+        total_items, total_pages, start_index, stop_index = self._get_pages_info(page)
+        self._edit_buttons_state(page, total_pages)
+        page_data = self.apply_page(
+            start_index,
+            stop_index,
+            total_pages > 1,
+            page,
+            total_items,
+            total_pages,
+        )
+        self._current_page = page
+        return page_data
 
     def apply_page(
         self,

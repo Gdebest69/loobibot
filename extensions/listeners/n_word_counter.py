@@ -12,15 +12,15 @@ class NWordListActionRow(PagedListActionRow):
         n_word_list_view: "NWordListView",
         page: int,
     ):
-        self.bot = bot
-        self.guild = guild
-        self.n_word_list_view = n_word_list_view
         super().__init__(
             lambda: len(bot.get_guild_data(guild.id).n_words),
             MAX_VALUES_PER_PAGE,
             page,
             ButtonStyle.blurple,
         )
+        self.bot = bot
+        self.guild = guild
+        self.n_word_list_view = n_word_list_view
 
     def apply_page(
         self, start_index, stop_index, multiple_pages, page, total_items, total_pages
@@ -122,7 +122,7 @@ class NWordCounter(commands.Cog):
             return
 
         view = NWordListView(self.bot, interaction.guild, page)
-        await view.send_message(interaction, view.action_row.init_page_data)
+        await view.send_message(interaction, view.action_row.update_page())
 
 
 async def setup(bot: LoobiBot):

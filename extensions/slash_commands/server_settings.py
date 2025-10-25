@@ -2,6 +2,7 @@ from discord.ui import Button, RoleSelect, View, TextInput, Modal, Select, Chann
 from discord import ButtonStyle, TextStyle
 from extensions.slash_commands.private_channel import PrivateChannelSettingsView
 from extensions.listeners.give_dj_role import DJRolesSettingsView
+from extensions.slash_commands.karma import KarmaAmountsSettingsView
 from main import *
 
 
@@ -779,6 +780,14 @@ class MainSettingsView(SettingsView):
                 "DJ roles settings",
                 accessory=ManageSettingsButton(
                     lambda: DJRolesSettingsView(bot, guild, back_view_factory)
+                ),
+            )
+        )
+        container.add_item(
+            ui.Section(
+                "Karma amounts settings",
+                accessory=ManageSettingsButton(
+                    lambda: KarmaAmountsSettingsView(bot, guild, back_view_factory)
                 ),
             )
         )
