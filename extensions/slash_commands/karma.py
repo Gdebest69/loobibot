@@ -40,7 +40,10 @@ class ChangeKarmaAmountButton(ui.Button["KarmaAmountsSettingsView"]):
             return
 
         self.view.apply_amount(self.role_id, int(self.text_input.value))
-        await interaction.response.edit_message(view=self.view)
+        try:
+            await interaction.response.edit_message(view=self.view)
+        except discord.NotFound:
+            await interaction.response.defer()
 
 
 class KarmaAmountsActionRow(PagedListActionRow):
@@ -82,7 +85,10 @@ class KarmaAmountsActionRow(PagedListActionRow):
     async def responde_to_interaction(
         self, interaction: discord.Interaction, page_data: None
     ):
-        await interaction.response.edit_message(view=self.settings_view)
+        try:
+            await interaction.response.edit_message(view=self.settings_view)
+        except discord.NotFound:
+            await interaction.response.defer()
 
 
 class AddNewKarmaAmountModal(ui.Modal, title="Add new amount"):
@@ -110,7 +116,10 @@ class AddNewKarmaAmountModal(ui.Modal, title="Add new amount"):
             self.role_input.component.values[0].id,
             int(self.value_input.component.value),
         )
-        await interaction.response.edit_message(view=self.view)
+        try:
+            await interaction.response.edit_message(view=self.view)
+        except discord.NotFound:
+            await interaction.response.defer()
 
 
 class SetDefaultAmountModal(ui.Modal, title="Set default amount"):
@@ -136,7 +145,10 @@ class SetDefaultAmountModal(ui.Modal, title="Set default amount"):
 
         self.guild_data.default_karma_amount = int(self.text_input.component.value)
         self.button.label = f"Default amount: {self.guild_data.default_karma_amount}"
-        await interaction.response.edit_message(view=self.button.view)
+        try:
+            await interaction.response.edit_message(view=self.button.view)
+        except:
+            await interaction.response.defer()
 
 
 class ManageAmountsActionRow(ui.ActionRow["KarmaAmountsSettingsView"]):
