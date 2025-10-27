@@ -32,7 +32,9 @@ class GuildData:
         private_channels_category_id: int = 0,
         karma_points: dict[int, int] = None,
         karma_enabled: bool = True,
+        enabled_commands: list[str] = None,
         disabled_commands: list[str] = None,
+        enabled_channels: list[int] = None,
         disabled_channels: list[int] = None,
         game_status_channels_id: list[int] = None,
         n_words: dict[int, int] = None,
@@ -44,8 +46,12 @@ class GuildData:
             game_status_channels_id = []
         if disabled_channels is None:
             disabled_channels = []
+        if enabled_channels is None:
+            enabled_channels = []
         if disabled_commands is None:
             disabled_commands = []
+        if enabled_commands is None:
+            enabled_commands = []
         if karma_points is None:
             karma_points = {}
         if dj_roles_id is None:
@@ -70,7 +76,9 @@ class GuildData:
         self.private_channels_category_id = private_channels_category_id
         self.karma_points = karma_points
         self.karma_enabled = karma_enabled
+        self.enabled_commands = enabled_commands
         self.disabled_commands = disabled_commands
+        self.enabled_channels = enabled_channels
         self.disabled_channels = disabled_channels
         self.game_status_channels_id = game_status_channels_id
         self.n_words = n_words
@@ -79,6 +87,10 @@ class GuildData:
     def update(self):
         if not hasattr(self, "karma_enabled"):
             self.karma_enabled = True
+        if not hasattr(self, "enabled_commands"):
+            self.enabled_commands = []
+        if not hasattr(self, "enabled_channels"):
+            self.enabled_channels = []
 
 
 class UserData:
@@ -207,9 +219,10 @@ class LoobiBot(commands.Bot):
         ):
             return True
         # check guild commands restrictions
-        if (
-            interaction.channel.id
-            in self.get_guild_data(interaction.guild_id).disabled_channels
+        guild_data = self.get_guild_data(interaction.guild_id)
+        if interaction.channel.id in guild_data.disabled_channels or (
+            guild_data.enabled_channels
+            and interaction.channel.id not in guild_data.enabled_channels
         ):
             await interaction.response.send_message(
                 "You can't use my commands in this channel", ephemeral=True
@@ -222,7 +235,9 @@ class LoobiBot(commands.Bot):
             root_name = interaction.command.name
         else:
             root_name = interaction.command.root_parent.name
-        if root_name in self.get_guild_data(interaction.guild_id).disabled_commands:
+        if root_name in guild_data.disabled_commands or (
+            guild_data.enabled_commands and root_name not in guild_data.enabled_commands
+        ):
             await interaction.response.send_message(
                 "This command is disabled on this server", ephemeral=True
             )

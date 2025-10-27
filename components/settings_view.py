@@ -63,3 +63,36 @@ class ManageRolesSelect(ui.ActionRow[SettingsView]):
             self.role_ids.append(role.id)
         self.set_default_roles()
         await interaction.response.edit_message(view=self.view)
+
+
+class ManageChannelsSelect(ui.ActionRow[SettingsView]):
+    def __init__(
+        self,
+        channel_ids: list[int],
+        placeholder_text: str,
+        channel_types: list[discord.ChannelType] = None,
+    ):
+        super().__init__()
+        self.channel_ids = channel_ids
+        self.select_channels.placeholder = placeholder_text
+        if channel_types is not None:
+            self.select_channels.channel_types = channel_types
+        self.set_default_channels()
+
+    def set_default_channels(self):
+        self.select_channels.default_values = [
+            discord.SelectDefaultValue(
+                id=channel_id, type=discord.SelectDefaultValueType.channel
+            )
+            for channel_id in self.channel_ids
+        ]
+
+    @ui.select(min_values=0, max_values=MAX_VALUES, cls=ui.ChannelSelect)
+    async def select_channels(
+        self, interaction: discord.Interaction, select: ui.ChannelSelect
+    ):
+        self.channel_ids.clear()
+        for channel in select.values:
+            self.channel_ids.append(channel.id)
+        self.set_default_channels()
+        await interaction.response.edit_message(view=self.view)

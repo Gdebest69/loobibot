@@ -3,6 +3,7 @@ from discord import ButtonStyle, TextStyle
 from extensions.slash_commands.private_channel import PrivateChannelSettingsView
 from extensions.listeners.give_dj_role import DJRolesSettingsView
 from extensions.slash_commands.karma import KarmaAmountsSettingsView
+from components.commands_usage_view import CommandsUsageSettingsView
 from main import *
 
 
@@ -769,7 +770,7 @@ class MainSettingsView(SettingsView):
         back_view_factory = lambda: MainSettingsView(bot, guild)
         container.add_item(
             ui.Section(
-                "Private channels settings",
+                "Private channels",
                 accessory=ManageSettingsButton(
                     lambda: PrivateChannelSettingsView(bot, guild, back_view_factory)
                 ),
@@ -777,7 +778,7 @@ class MainSettingsView(SettingsView):
         )
         container.add_item(
             ui.Section(
-                "DJ roles settings",
+                "DJ roles",
                 accessory=ManageSettingsButton(
                     lambda: DJRolesSettingsView(bot, guild, back_view_factory)
                 ),
@@ -785,9 +786,17 @@ class MainSettingsView(SettingsView):
         )
         container.add_item(
             ui.Section(
-                "Karma amounts settings",
+                "Karma amounts",
                 accessory=ManageSettingsButton(
                     lambda: KarmaAmountsSettingsView(bot, guild, back_view_factory)
+                ),
+            )
+        )
+        container.add_item(
+            ui.Section(
+                "Commands usage",
+                accessory=ManageSettingsButton(
+                    lambda: CommandsUsageSettingsView(bot, guild, back_view_factory)
                 ),
             )
         )
