@@ -21,7 +21,7 @@ class SpecificPageModal(ui.Modal, title="Go to page"):
     page_input = ui.Label(text="Page number", component=ui.TextInput())
 
     def __init__(self, action_row: "PagedListActionRow", max_page: int):
-        super().__init__()
+        super().__init__(timeout=MODAL_TIMEOUT)
         assert isinstance(self.page_input.component, ui.TextInput)
         self.action_row = action_row
         self.page_input.component.default = str(action_row._current_page)

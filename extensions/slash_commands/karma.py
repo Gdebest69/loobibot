@@ -9,7 +9,7 @@ class ChangeKarmaAmountButton(ui.Button["KarmaAmountsSettingsView"]):
         super().__init__(label=str(karma_points[role_id]), style=ButtonStyle.blurple)
         self.karma_points = karma_points
         self.role_id = role_id
-        self.modal = ui.Modal(title="Change value")
+        self.modal = ui.Modal(title="Change value", timeout=MODAL_TIMEOUT)
         self.text_input = ui.TextInput(
             default=str(karma_points[role_id]),
             required=False,
@@ -53,7 +53,7 @@ class KarmaAmountsActionRow(PagedListActionRow):
         guild: discord.Guild,
         settings_view: "KarmaAmountsSettingsView",
     ):
-        super().__init__(lambda: self.remove_deleted_roles(), MAX_VALUES_PER_PAGE)
+        super().__init__(self.remove_deleted_roles, 8)
         self.karma_points = karma_points
         self.guild = guild
         self.settings_view = settings_view
@@ -100,7 +100,7 @@ class AddNewKarmaAmountModal(ui.Modal, title="Add new amount"):
     )
 
     def __init__(self, view: "KarmaAmountsSettingsView"):
-        super().__init__()
+        super().__init__(timeout=MODAL_TIMEOUT)
         self.view = view
 
     async def on_submit(self, interaction: discord.Interaction):
@@ -129,7 +129,7 @@ class SetDefaultAmountModal(ui.Modal, title="Set default amount"):
     )
 
     def __init__(self, guild_data: GuildData, button: ui.Button):
-        super().__init__()
+        super().__init__(timeout=MODAL_TIMEOUT)
         assert isinstance(self.text_input.component, ui.TextInput)
         self.guild_data = guild_data
         self.button = button
