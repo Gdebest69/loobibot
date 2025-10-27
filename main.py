@@ -31,6 +31,7 @@ class GuildData:
         default_karma_amount: int = DEFAULT_KARMA_AMOUNT,
         private_channels_category_id: int = 0,
         karma_points: dict[int, int] = None,
+        karma_enabled: bool = True,
         disabled_commands: list[str] = None,
         disabled_channels: list[int] = None,
         game_status_channels_id: list[int] = None,
@@ -68,6 +69,7 @@ class GuildData:
         self.default_karma_amount = default_karma_amount
         self.private_channels_category_id = private_channels_category_id
         self.karma_points = karma_points
+        self.karma_enabled = karma_enabled
         self.disabled_commands = disabled_commands
         self.disabled_channels = disabled_channels
         self.game_status_channels_id = game_status_channels_id
@@ -75,8 +77,8 @@ class GuildData:
         self.auto_roles_enabled = auto_roles_enabled
 
     def update(self):
-        if not hasattr(self, "auto_roles_enabled"):
-            self.auto_roles_enabled = False
+        if not hasattr(self, "karma_enabled"):
+            self.karma_enabled = True
 
 
 class UserData:

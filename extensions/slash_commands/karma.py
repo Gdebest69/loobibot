@@ -151,13 +151,14 @@ class SetDefaultAmountModal(ui.Modal, title="Set default amount"):
             await interaction.response.defer()
 
 
-class ManageAmountsActionRow(ui.ActionRow["KarmaAmountsSettingsView"]):
+class ManageKarmaActionRow(ui.ActionRow["KarmaAmountsSettingsView"]):
     def __init__(self, guild_data: GuildData):
         super().__init__()
         self.guild_data = guild_data
         self.change_default_amount.label = (
             f"Default amount: {guild_data.default_karma_amount}"
         )
+        self.edit_toggle_karma_button()
 
     @ui.button(label="+", style=ButtonStyle.blurple)
     async def add_new_karma_amount(
@@ -171,6 +172,21 @@ class ManageAmountsActionRow(ui.ActionRow["KarmaAmountsSettingsView"]):
     ):
         await interaction.response.send_modal(
             SetDefaultAmountModal(self.guild_data, button)
+        )
+
+    @ui.button()
+    async def toggle_karma_response(
+        self, interaction: discord.Interaction, button: ui.Button
+    ):
+        self.guild_data.karma_enabled = not self.guild_data.karma_enabled
+        self.edit_toggle_karma_button()
+        await interaction.response.edit_message(view=self.view)
+
+    def edit_toggle_karma_button(self):
+        self.toggle_karma_response.label, self.toggle_karma_response.style = (
+            ("Disable karma response", ButtonStyle.red)
+            if self.guild_data.karma_enabled
+            else ("Enable karma response", ButtonStyle.green)
         )
 
 
@@ -198,7 +214,7 @@ class KarmaAmountsSettingsView(SettingsView):
         for section in amounts_sections:
             self.container.add_item(section)
         self.container.add_item(
-            ManageAmountsActionRow(self.bot.get_guild_data(self.guild.id))
+            ManageKarmaActionRow(self.bot.get_guild_data(self.guild.id))
         )
         if add_paged_list_action_row:
             self.container.add_item(self.paged_list_action_row)
@@ -373,11 +389,11 @@ class KarmaCommand(
         # gg
         if plain_message(message.content).lower() == "gg":
             # channel check
-            if is_in_dm(message):
+            if not is_in_guild(message):
                 return
 
-            # command check
-            if "karma" in self.bot.get_guild_data(message.guild.id).disabled_commands:
+            # feature check
+            if not self.bot.get_guild_data(message.guild.id).karma_enabled:
                 return
 
             print_message(message, self.bot.logger)
