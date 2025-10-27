@@ -87,5 +87,8 @@ class CommandsUsageSettingsView(SettingsView):
                 channel_types,
             )
         )
+        container.add_item(
+            ui.TextDisplay("Command restrictions are ignored when admins use them")
+        )
         self.add_item(container)
         self.add_back_button(back_view_factory)
