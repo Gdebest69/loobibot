@@ -5,6 +5,7 @@ from extensions.listeners.give_dj_role import DJRolesSettingsView
 from extensions.slash_commands.karma import KarmaAmountsSettingsView
 from components.commands_usage_view import CommandsUsageSettingsView
 from extensions.listeners.auto_channel_status import ActivityStatusSettingsView
+from extensions.listeners.auto_roles import AutoRolesSettingsView
 from main import *
 
 
@@ -808,6 +809,16 @@ class MainSettingsView(SettingsView):
                     lambda: ActivityStatusSettingsView(
                         bot.get_guild_data(guild.id).game_status_channels_id,
                         back_view_factory,
+                    )
+                ),
+            )
+        )
+        container.add_item(
+            ui.Section(
+                "Auto roles",
+                accessory=ManageSettingsButton(
+                    lambda: AutoRolesSettingsView(
+                        bot.get_guild_data(guild.id), back_view_factory
                     )
                 ),
             )

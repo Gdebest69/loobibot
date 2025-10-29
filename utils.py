@@ -251,6 +251,15 @@ def get_emoji_asset(emoji_str: str) -> tuple[str, str] | tuple[None, None]:
     return None, None
 
 
+def is_allowed(value, whitelist: list, blacklist: list):
+    """Check if value is allowed based on whitelist and blacklist."""
+    if value in blacklist:
+        return False
+    if whitelist and value not in whitelist:
+        return False
+    return True
+
+
 class JMusicBot:
     def __init__(self, path: str):
         self.path = path

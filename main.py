@@ -39,33 +39,39 @@ class GuildData:
         game_status_channels_id: list[int] = None,
         n_words: dict[int, int] = None,
         auto_roles_enabled: bool = False,
+        enabled_auto_roles: list[int] = None,
+        disabled_auto_roles: list[int] = None,
     ):
-        if n_words is None:
-            n_words = {}
-        if game_status_channels_id is None:
-            game_status_channels_id = []
-        if disabled_channels is None:
-            disabled_channels = []
-        if enabled_channels is None:
-            enabled_channels = []
-        if disabled_commands is None:
-            disabled_commands = []
-        if enabled_commands is None:
-            enabled_commands = []
-        if karma_points is None:
-            karma_points = {}
-        if dj_roles_id is None:
-            dj_roles_id = []
-        if nick_all_roles_id is None:
-            nick_all_roles_id = []
-        if private_channel_roles_id is None:
-            private_channel_roles_id = []
-        if roles is None:
-            roles = {}
-        if karma is None:
-            karma = {}
         if private_channels is None:
             private_channels = {}
+        if karma is None:
+            karma = {}
+        if roles is None:
+            roles = {}
+        if private_channel_roles_id is None:
+            private_channel_roles_id = []
+        if nick_all_roles_id is None:
+            nick_all_roles_id = []
+        if dj_roles_id is None:
+            dj_roles_id = []
+        if karma_points is None:
+            karma_points = {}
+        if enabled_commands is None:
+            enabled_commands = []
+        if disabled_commands is None:
+            disabled_commands = []
+        if enabled_channels is None:
+            enabled_channels = []
+        if disabled_channels is None:
+            disabled_channels = []
+        if game_status_channels_id is None:
+            game_status_channels_id = []
+        if n_words is None:
+            n_words = {}
+        if enabled_auto_roles is None:
+            enabled_auto_roles = []
+        if disabled_auto_roles is None:
+            disabled_auto_roles = []
         self.private_channels = private_channels
         self.karma = karma
         self.roles = roles
@@ -83,6 +89,8 @@ class GuildData:
         self.game_status_channels_id = game_status_channels_id
         self.n_words = n_words
         self.auto_roles_enabled = auto_roles_enabled
+        self.enabled_auto_roles = enabled_auto_roles
+        self.disabled_auto_roles = disabled_auto_roles
 
     def update(self):
         if not hasattr(self, "karma_enabled"):
@@ -91,6 +99,10 @@ class GuildData:
             self.enabled_commands = []
         if not hasattr(self, "enabled_channels"):
             self.enabled_channels = []
+        if not hasattr(self, "enabled_auto_roles"):
+            self.enabled_auto_roles = []
+        if not hasattr(self, "disabled_auto_roles"):
+            self.disabled_auto_roles = []
 
 
 class UserData:
@@ -220,9 +232,10 @@ class LoobiBot(commands.Bot):
             return True
         # check guild commands restrictions
         guild_data = self.get_guild_data(interaction.guild_id)
-        if interaction.channel.id in guild_data.disabled_channels or (
-            guild_data.enabled_channels
-            and interaction.channel.id not in guild_data.enabled_channels
+        if not is_allowed(
+            interaction.channel.id,
+            guild_data.enabled_channels,
+            guild_data.disabled_channels,
         ):
             await interaction.response.send_message(
                 "You can't use my commands in this channel", ephemeral=True
@@ -235,8 +248,8 @@ class LoobiBot(commands.Bot):
             root_name = interaction.command.name
         else:
             root_name = interaction.command.root_parent.name
-        if root_name in guild_data.disabled_commands or (
-            guild_data.enabled_commands and root_name not in guild_data.enabled_commands
+        if not is_allowed(
+            root_name, guild_data.enabled_commands, guild_data.disabled_commands
         ):
             await interaction.response.send_message(
                 "This command is disabled on this server", ephemeral=True
