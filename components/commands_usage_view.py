@@ -16,11 +16,15 @@ class CommandsSelect(ui.ActionRow["CommandsUsageSettingsView"]):
         self.select_commands.placeholder = placeholder_text
         for command in bot.tree.get_commands(type=discord.AppCommandType.chat_input):
             if is_guild_installed(command):
-                self.select_commands.add_option(label=command.name)
+                self.select_commands.add_option(
+                    label=command.name, description=command.description
+                )
         for command in bot.tree.get_commands(
             guild=guild, type=discord.AppCommandType.chat_input
         ):
-            self.select_commands.add_option(label=command.name)
+            self.select_commands.add_option(
+                label=command.name, description=command.description
+            )
         self.select_commands.max_values = len(self.select_commands.options)
         self.set_default_commands()
 
