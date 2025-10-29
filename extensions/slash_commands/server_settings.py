@@ -4,6 +4,7 @@ from extensions.slash_commands.private_channel import PrivateChannelSettingsView
 from extensions.listeners.give_dj_role import DJRolesSettingsView
 from extensions.slash_commands.karma import KarmaAmountsSettingsView
 from components.commands_usage_view import CommandsUsageSettingsView
+from extensions.listeners.auto_channel_status import ActivityStatusSettingsView
 from main import *
 
 
@@ -797,6 +798,17 @@ class MainSettingsView(SettingsView):
                 "Commands usage",
                 accessory=ManageSettingsButton(
                     lambda: CommandsUsageSettingsView(bot, guild, back_view_factory)
+                ),
+            )
+        )
+        container.add_item(
+            ui.Section(
+                "Auto channel status",
+                accessory=ManageSettingsButton(
+                    lambda: ActivityStatusSettingsView(
+                        bot.get_guild_data(guild.id).game_status_channels_id,
+                        back_view_factory,
+                    )
                 ),
             )
         )

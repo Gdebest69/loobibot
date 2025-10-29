@@ -1,4 +1,26 @@
+from discord import ui
+from components.settings_view import SettingsView, ManageChannelsSelect
 from main import *
+
+
+class ActivityStatusSettingsView(SettingsView):
+    def __init__(self, channel_ids: list[int], back_view_factory):
+        super().__init__()
+        container = ui.Container()
+        container.add_item(ui.TextDisplay("# Activity status settings"))
+        container.add_item(
+            ui.Separator(visible=False, spacing=discord.SeparatorSpacing.large)
+        )
+        container.add_item(ui.TextDisplay("Activity status channels"))
+        container.add_item(
+            ManageChannelsSelect(
+                channel_ids,
+                "Select channels to have auto activity status",
+                [discord.ChannelType.voice],
+            )
+        )
+        self.add_item(container)
+        self.add_back_button(back_view_factory)
 
 
 class AutoChannelStatus(commands.Cog):
