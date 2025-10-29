@@ -25,7 +25,6 @@ class SettingsView(ui.LayoutView):
         self.message = message
 
     async def on_timeout(self):
-        print(self.__class__.__name__, "timed out")
         if self.message is not None:
             try:
                 await self.message.delete()

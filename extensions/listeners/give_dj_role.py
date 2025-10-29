@@ -7,7 +7,7 @@ class DJRolesSettingsView(SettingsView):
     def __init__(self, bot: LoobiBot, guild: discord.Guild, back_view_factory):
         super().__init__()
         container = ui.Container()
-        container.add_item(ui.TextDisplay("# DJ Roles settings"))
+        container.add_item(ui.TextDisplay("# DJ roles settings"))
         container.add_item(
             ui.Separator(visible=False, spacing=discord.SeparatorSpacing.large)
         )
