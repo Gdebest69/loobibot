@@ -18,7 +18,7 @@ class PrivateChannelsCategorySelect(ui.ActionRow["PrivateChannelSettingsView"]):
         self.select_category.default_values = [category] if category is not None else []
 
     @ui.select(
-        placeholder="No category selected",
+        placeholder="Select category",
         channel_types=[discord.ChannelType.category],
         min_values=0,
         max_values=1,
