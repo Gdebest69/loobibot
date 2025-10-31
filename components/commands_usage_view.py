@@ -14,23 +14,30 @@ class CommandsSelect(ui.ActionRow["CommandsUsageSettingsView"]):
         super().__init__()
         self.command_list = command_list
         self.select_commands.placeholder = placeholder_text
-        for command in bot.tree.get_commands(type=discord.AppCommandType.chat_input):
-            if is_guild_installed(command):
-                self.select_commands.add_option(
-                    label=command.name, description=command.description
-                )
-        for command in bot.tree.get_commands(
-            guild=guild, type=discord.AppCommandType.chat_input
-        ):
-            self.select_commands.add_option(
-                label=command.name, description=command.description
-            )
+        self.add_command_options(bot, guild)
+        self.add_command_options(bot)
         self.select_commands.max_values = len(self.select_commands.options)
         self.set_default_commands()
 
     def set_default_commands(self):
         for option in self.select_commands.options:
-            option.default = option.label in self.command_list
+            option.default = option.value in self.command_list
+
+    def add_command_options(self, bot: LoobiBot, guild: discord.Guild = None):
+        for command in bot.tree.get_commands(guild=guild):
+            if not is_guild_installed(command) and guild is None:
+                continue
+            if isinstance(command, app_commands.Command) or isinstance(
+                command, app_commands.Group
+            ):
+                self.select_commands.add_option(
+                    label=f"/{command.name}",
+                    value=command.name,
+                    description=command.description,
+                )
+            elif isinstance(command, app_commands.ContextMenu):
+                emoji = "💬" if command.type == discord.AppCommandType.message else "👤"
+                self.select_commands.add_option(label=command.name, emoji=emoji)
 
     @ui.select(min_values=0)
     async def select_commands(
