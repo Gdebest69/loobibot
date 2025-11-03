@@ -158,6 +158,7 @@ class ManageKarmaActionRow(ui.ActionRow["KarmaAmountsSettingsView"]):
         self.change_default_amount.label = (
             f"Default amount: {guild_data.default_karma_amount}"
         )
+        self.karma_enabled = guild_data.karma_enabled
         self.edit_toggle_karma_button()
 
     @ui.button(label="+", style=ButtonStyle.blurple)
@@ -178,14 +179,15 @@ class ManageKarmaActionRow(ui.ActionRow["KarmaAmountsSettingsView"]):
     async def toggle_karma_response(
         self, interaction: discord.Interaction, button: ui.Button
     ):
-        self.guild_data.karma_enabled = not self.guild_data.karma_enabled
+        self.karma_enabled = not self.karma_enabled
+        self.guild_data.karma_enabled = self.karma_enabled
         self.edit_toggle_karma_button()
         await interaction.response.edit_message(view=self.view)
 
     def edit_toggle_karma_button(self):
         self.toggle_karma_response.label, self.toggle_karma_response.style = (
             ("Disable karma response", ButtonStyle.red)
-            if self.guild_data.karma_enabled
+            if self.karma_enabled
             else ("Enable karma response", ButtonStyle.green)
         )
 

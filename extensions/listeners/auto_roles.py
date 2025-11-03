@@ -7,12 +7,13 @@ class ToggleAutoRolesButton(ui.ActionRow[SettingsView]):
     def __init__(self, guild_data: GuildData):
         super().__init__()
         self.guild_data = guild_data
+        self.auto_roles_enabled = guild_data.auto_roles_enabled
         self.update_button()
 
     def update_button(self):
         self.toggle_auto_roles.label, self.toggle_auto_roles.style = (
             ("Disable auto roles", ButtonStyle.red)
-            if self.guild_data.auto_roles_enabled
+            if self.auto_roles_enabled
             else ("Enable auto roles", ButtonStyle.green)
         )
 
@@ -20,7 +21,8 @@ class ToggleAutoRolesButton(ui.ActionRow[SettingsView]):
     async def toggle_auto_roles(
         self, interaction: discord.Interaction, button: ui.Button
     ):
-        self.guild_data.auto_roles_enabled = not self.guild_data.auto_roles_enabled
+        self.auto_roles_enabled = not self.auto_roles_enabled
+        self.guild_data.auto_roles_enabled = self.auto_roles_enabled
         self.update_button()
         await interaction.response.edit_message(view=self.view)
 
