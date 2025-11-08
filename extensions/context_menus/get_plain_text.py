@@ -27,15 +27,22 @@ class GetPlainTextCommand(commands.Cog):
             )
             for i, embed in enumerate(message.embeds)
         ]
-        files = (
-            [
+        component_files = [
+            discord.File(
+                StringIO(json.dumps(component.to_dict(), indent=4)),
+                filename=f"component{i}_{message.id}.json",
+            )
+            for i, component in enumerate(message.components)
+        ]
+        files = []
+        if message.content:
+            files.append(
                 discord.File(
                     StringIO(message.content), filename=f"message_{message.id}.txt"
                 )
-            ]
-            if len(message.content) > 0
-            else []
-        ) + embed_files
+            )
+        files += embed_files
+        files += component_files
 
         if message.stickers:
             sticker_list_message = "\n".join(
@@ -45,7 +52,7 @@ class GetPlainTextCommand(commands.Cog):
             sticker_list_message = None
 
         await thinking_task
-        if len(files) == 0 and sticker_list_message is None:
+        if not files and sticker_list_message is None:
             await interaction.edit_original_response(content="Message content is empty")
         elif len(files) <= 10:
             await interaction.edit_original_response(
