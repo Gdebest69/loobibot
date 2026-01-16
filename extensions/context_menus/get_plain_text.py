@@ -20,44 +20,47 @@ class GetPlainTextCommand(commands.Cog):
         self, interaction: discord.Interaction, message: discord.Message
     ):
         thinking_task = create_task(interaction.response.defer(ephemeral=True))
+
+        content = ""
+        message_id = message.id
+        if message.message_snapshots:
+            message = message.message_snapshots[0]
+            content += "-# _Forwarded_"
+
         embed_files = [
             discord.File(
                 StringIO(json.dumps(embed.to_dict(), indent=4)),
-                filename=f"embed{i}_{message.id}.json",
+                filename=f"embed{i}_{message_id}.json",
             )
             for i, embed in enumerate(message.embeds)
         ]
         component_files = [
             discord.File(
                 StringIO(json.dumps(component.to_dict(), indent=4)),
-                filename=f"component{i}_{message.id}.json",
+                filename=f"component{i}_{message_id}.json",
             )
             for i, component in enumerate(message.components)
         ]
-        files = []
+        files: list[discord.File] = []
         if message.content:
             files.append(
                 discord.File(
-                    StringIO(message.content), filename=f"message_{message.id}.txt"
+                    StringIO(message.content), filename=f"message_{message_id}.txt"
                 )
             )
         files += embed_files
         files += component_files
 
         if message.stickers:
-            sticker_list_message = "\n".join(
-                [sticker.url for sticker in message.stickers]
-            )
-        else:
-            sticker_list_message = None
+            content += "\n" + "\n".join([sticker.url for sticker in message.stickers])
+        if not content:
+            content = None
 
         await thinking_task
-        if not files and sticker_list_message is None:
+        if not files and not message.stickers:
             await interaction.edit_original_response(content="Message content is empty")
         elif len(files) <= 10:
-            await interaction.edit_original_response(
-                content=sticker_list_message, attachments=files
-            )
+            await interaction.edit_original_response(content=content, attachments=files)
         else:
             # Create a zip file with all the files beacause discord only allows 10 attachments per message
             zip_buffer = BytesIO()
@@ -65,9 +68,9 @@ class GetPlainTextCommand(commands.Cog):
                 for discord_file in files:
                     zip_file.writestr(discord_file.filename, discord_file.fp.read())
             zip_buffer.seek(0)
-            zip_file = discord.File(zip_buffer, filename=f"{message.id}.zip")
+            zip_file = discord.File(zip_buffer, filename=f"{message_id}.zip")
             await interaction.edit_original_response(
-                content=sticker_list_message, attachments=[zip_file]
+                content=content, attachments=[zip_file]
             )
 
 
