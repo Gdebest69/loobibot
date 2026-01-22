@@ -1,5 +1,4 @@
 import subprocess
-from wakeonlan import send_magic_packet
 from main import *
 
 
