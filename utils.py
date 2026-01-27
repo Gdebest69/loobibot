@@ -283,9 +283,13 @@ class JMusicBot:
 
     def get_prefix(self):
         with open(os.path.join(self.path, "config.txt")) as file:
-            match = re.search(r'prefix = "(.*?)"', file.read())
+            match = re.search(
+                r"commands\s*\{(?:[^#}]|#[^\n]*\n?)*?prefix\s*=\s*(\S+)",
+                file.read(),
+                re.DOTALL,
+            )
             if match:
-                # Extract the value of 'prefix' without quotes
+                # Extract the value of 'prefix'
                 prefix_value = match.group(1)
                 return prefix_value
             else:
