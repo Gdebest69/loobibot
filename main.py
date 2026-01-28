@@ -118,7 +118,7 @@ class UserData:
 
 class LoobiBot(commands.Bot):
     def __init__(self, **options):
-        self.music = JMusicBot(in_folder("music_bot"))
+        self.music = JMusicBot(MUSIC_BOT_PATH)
         intents = discord.Intents.default()
         intents.members = True
         intents.presences = True
