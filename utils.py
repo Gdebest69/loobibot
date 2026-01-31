@@ -291,6 +291,6 @@ class JMusicBot:
             conf: pyhocon.ConfigTree = pyhocon.ConfigFactory.parse_file(
                 os.path.join(self.path, "config.txt")
             )
-            return conf.get_string("prefix")
+            return conf.get_config("commands").get("prefix")
         except (FileNotFoundError, pyhocon.ConfigMissingException):
             return None
