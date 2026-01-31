@@ -4,7 +4,7 @@ import discord
 import datetime
 import settings
 import json
-import re
+import pyhocon
 import aiohttp
 from discord import app_commands
 
@@ -265,13 +265,18 @@ class JMusicBot:
         self.path = path
         self.prefix = self.get_prefix()
 
-    def get_server_settings_data(self):
-        with open(os.path.join(self.path, "serversettings.json"), "r") as file:
-            server_settings = json.load(file)
-        return server_settings
+    def get_server_settings_data(self) -> dict | None:
+        try:
+            with open(os.path.join(self.path, "serversettings.json"), "r") as file:
+                server_settings = json.load(file)
+            return server_settings
+        except FileNotFoundError:
+            return None
 
-    def get_dj_role(self, guild: discord.Guild):
+    def get_dj_role(self, guild: discord.Guild) -> discord.Role | None:
         server_settings = self.get_server_settings_data()
+        if server_settings is None:
+            return None
         if str(guild.id) not in server_settings:
             return None
         guild_settings = server_settings[str(guild.id)]
@@ -281,16 +286,11 @@ class JMusicBot:
         dj_role = guild.get_role(dj_role_id)
         return dj_role
 
-    def get_prefix(self):
-        with open(os.path.join(self.path, "config.txt")) as file:
-            match = re.search(
-                r"commands\s*\{(?:[^#}]|#[^\n]*\n?)*?prefix\s*=\s*(\S+)",
-                file.read(),
-                re.DOTALL,
+    def get_prefix(self) -> str | None:
+        try:
+            conf: pyhocon.ConfigTree = pyhocon.ConfigFactory.parse_file(
+                os.path.join(self.path, "config.txt")
             )
-            if match:
-                # Extract the value of 'prefix'
-                prefix_value = match.group(1)
-                return prefix_value
-            else:
-                raise ValueError("Can't find the prefix of the music bot")
+            return conf.get_string("prefix")
+        except (FileNotFoundError, pyhocon.ConfigMissingException):
+            return None

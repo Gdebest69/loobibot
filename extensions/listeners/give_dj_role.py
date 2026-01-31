@@ -24,11 +24,12 @@ class DJRolesSettingsView(SettingsView):
                 f"DJ role: {dj_role.mention if dj_role is not None else str(None)}"
             )
         )
-        container.add_item(
-            ui.TextDisplay(
-                f"You can change the DJ role using: {bot.music.prefix}setdj <rolename|NONE>"
+        if bot.music.prefix is not None:
+            container.add_item(
+                ui.TextDisplay(
+                    f"You can change the DJ role using: {bot.music.prefix}setdj <rolename|NONE>"
+                )
             )
-        )
         self.add_item(container)
         self.add_back_button(back_view_factory)
 

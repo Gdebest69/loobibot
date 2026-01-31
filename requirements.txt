@@ -3,3 +3,4 @@ mcstatus
 crafty-client
 urllib3
 pillow
+pyhocon
