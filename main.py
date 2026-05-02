@@ -118,16 +118,21 @@ class UserData:
 
 class LoobiBot(commands.Bot):
     def __init__(self, **options):
-        self.music = JMusicBot(in_folder("music_bot"))
+        self.music = JMusicBot(MUSIC_BOT_PATH)
         intents = discord.Intents.default()
         intents.members = True
         intents.presences = True
         intents.message_content = True
         self.logger = logging.getLogger("loobibot")
+        if self.music.prefix is None:
+            activity_name = "/help"
+            self.logger.warning("Can't find music bot prefix")
+        else:
+            activity_name = f"/help | {self.music.prefix}help"
         super().__init__(
             intents=intents,
             command_prefix="!",
-            activity=discord.Game(f"/help | {self.music.prefix}help"),
+            activity=discord.Game(activity_name),
             help_command=None,
             **options,
         )

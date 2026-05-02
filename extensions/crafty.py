@@ -2,6 +2,7 @@ import urllib3
 import asyncio
 import base64
 import io
+import re
 from crafty_client import Crafty4, static
 from discord.ext import tasks
 from main import *
