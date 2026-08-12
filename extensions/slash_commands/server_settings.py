@@ -67,8 +67,7 @@ class MainSettingsView(SettingsView):
                 "Auto channel status",
                 accessory=ManageSettingsButton(
                     lambda: ActivityStatusSettingsView(
-                        bot.get_guild_data(guild.id).game_status_channels_id,
-                        back_view_factory,
+                        bot.get_guild_data(guild.id), back_view_factory
                     )
                 ),
             )

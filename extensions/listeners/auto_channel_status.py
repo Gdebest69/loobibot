@@ -3,8 +3,32 @@ from components.settings_view import SettingsView, ManageChannelsSelect
 from main import *
 
 
+class ToggleMedalRemovalButton(ui.ActionRow[SettingsView]):
+    def __init__(self, guild_data: GuildData):
+        super().__init__()
+        self.guild_data = guild_data
+        self.remove_medal = guild_data.remove_medal
+        self.update_button()
+
+    def update_button(self):
+        self.toggle_medal_removal.label, self.toggle_medal_removal.style = (
+            ('Ignore "with Medal" text', discord.ButtonStyle.red)
+            if self.remove_medal
+            else ('Remove "with Medal" from games names', discord.ButtonStyle.green)
+        )
+
+    @ui.button()
+    async def toggle_medal_removal(
+        self, interaction: discord.Interaction, button: ui.Button
+    ):
+        self.remove_medal = not self.remove_medal
+        self.guild_data.remove_medal = self.remove_medal
+        self.update_button()
+        await interaction.response.edit_message(view=self.view)
+
+
 class ActivityStatusSettingsView(SettingsView):
-    def __init__(self, channel_ids: list[int], back_view_factory):
+    def __init__(self, guild_data: GuildData, back_view_factory):
         super().__init__()
         container = ui.Container()
         container.add_item(ui.TextDisplay("# Activity status settings"))
@@ -14,11 +38,13 @@ class ActivityStatusSettingsView(SettingsView):
         container.add_item(ui.TextDisplay("Activity status channels"))
         container.add_item(
             ManageChannelsSelect(
-                channel_ids,
+                guild_data.game_status_channels_id,
                 "Select channels to have auto activity status",
                 [discord.ChannelType.voice],
             )
         )
+        container.add_item(ui.Separator())
+        container.add_item(ToggleMedalRemovalButton(guild_data))
         self.add_item(container)
         self.add_back_button(back_view_factory)
 
@@ -47,6 +73,8 @@ class AutoChannelStatus(commands.Cog):
         if member.bot:
             return
 
+        remove_medal = self.bot.get_guild_data(member.guild.id).remove_medal
+
         if member.voice is not None or channel is not None:
             if channel is None:
                 channel = member.voice.channel
@@ -69,7 +97,11 @@ class AutoChannelStatus(commands.Cog):
                     game_name = None
                     non_players_count += 1
                 else:
-                    game_name = activity.name
+                    game_name = (
+                        activity.name.removesuffix(" with Medal")
+                        if remove_medal
+                        else activity.name
+                    )
                     players_count += 1
                 if game_name in games:
                     games[game_name] += 1
