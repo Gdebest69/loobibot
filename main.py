@@ -37,7 +37,7 @@ class GuildData:
         enabled_channels: list[int] = None,
         disabled_channels: list[int] = None,
         game_status_channels_id: list[int] = None,
-        remove_medal: bool = False,
+        activity_transformer: bool = False,
         n_words: dict[int, int] = None,
         auto_roles_enabled: bool = False,
         enabled_auto_roles: list[int] = None,
@@ -88,15 +88,15 @@ class GuildData:
         self.enabled_channels = enabled_channels
         self.disabled_channels = disabled_channels
         self.game_status_channels_id = game_status_channels_id
-        self.remove_medal = remove_medal
+        self.activity_transformer = activity_transformer
         self.n_words = n_words
         self.auto_roles_enabled = auto_roles_enabled
         self.enabled_auto_roles = enabled_auto_roles
         self.disabled_auto_roles = disabled_auto_roles
 
     def update(self):
-        if not hasattr(self, "remove_medal"):
-            self.remove_medal = False
+        if not hasattr(self, "activity_transformer"):
+            self.activity_transformer = False
 
 
 class UserData:

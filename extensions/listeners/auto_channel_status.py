@@ -1,28 +1,32 @@
+import json
 from discord import ui
 from components.settings_view import SettingsView, ManageChannelsSelect
 from main import *
 
 
-class ToggleMedalRemovalButton(ui.ActionRow[SettingsView]):
+class ToggleActivityTransformerButton(ui.ActionRow[SettingsView]):
     def __init__(self, guild_data: GuildData):
         super().__init__()
         self.guild_data = guild_data
-        self.remove_medal = guild_data.remove_medal
+        self.activity_transformer = guild_data.activity_transformer
         self.update_button()
 
     def update_button(self):
-        self.toggle_medal_removal.label, self.toggle_medal_removal.style = (
-            ('Ignore "with Medal" text', discord.ButtonStyle.red)
-            if self.remove_medal
-            else ('Remove "with Medal" from games names', discord.ButtonStyle.green)
+        (
+            self.toggle_activity_transformer.label,
+            self.toggle_activity_transformer.style,
+        ) = (
+            ("Disable activity transformer", discord.ButtonStyle.red)
+            if self.activity_transformer
+            else ("Enable activity transformer", discord.ButtonStyle.green)
         )
 
     @ui.button()
-    async def toggle_medal_removal(
+    async def toggle_activity_transformer(
         self, interaction: discord.Interaction, button: ui.Button
     ):
-        self.remove_medal = not self.remove_medal
-        self.guild_data.remove_medal = self.remove_medal
+        self.activity_transformer = not self.activity_transformer
+        self.guild_data.activity_transformer = self.activity_transformer
         self.update_button()
         await interaction.response.edit_message(view=self.view)
 
@@ -44,7 +48,13 @@ class ActivityStatusSettingsView(SettingsView):
             )
         )
         container.add_item(ui.Separator())
-        container.add_item(ToggleMedalRemovalButton(guild_data))
+        container.add_item(ToggleActivityTransformerButton(guild_data))
+        container.add_item(
+            ui.TextDisplay(
+                "If activity transformer is enabled, the same activities will be grouped together,"
+                ' for example: "Among Us with Medal" and "Among Us" will be shown as "Among Us"'
+            )
+        )
         self.add_item(container)
         self.add_back_button(back_view_factory)
 
@@ -53,6 +63,25 @@ class AutoChannelStatus(commands.Cog):
     def __init__(self, bot: LoobiBot):
         self.bot = bot
         self.ignored_channels_id: set[int] = set()
+        self.activity_transformer = self.load_activity_transformer()
+
+    def load_activity_transformer(self) -> dict[str, list[str] | dict[str, str]]:
+        try:
+            with open(in_folder("activity_transformer.json"), "r") as file:
+                activity_transformer = json.load(file)
+                if "prefixes" not in activity_transformer:
+                    activity_transformer["prefixes"] = []
+                if "suffixes" not in activity_transformer:
+                    activity_transformer["suffixes"] = []
+                if "replacements" not in activity_transformer:
+                    activity_transformer["replacements"] = {}
+        except FileNotFoundError:
+            activity_transformer = {
+                "prefixes": [],
+                "suffixes": [],
+                "replacements": {},
+            }
+        return activity_transformer
 
     def get_main_activity(self, member: discord.Member):
         activities = member.activities
@@ -67,13 +96,29 @@ class AutoChannelStatus(commands.Cog):
             )
         return main_activity
 
+    def transform_activity_name(self, activity_name: str) -> str:
+        # Remove prefixes
+        for prefix in self.activity_transformer["prefixes"]:
+            if activity_name.startswith(prefix):
+                activity_name = activity_name.removeprefix(prefix)
+                break
+        # Remove suffixes
+        for suffix in self.activity_transformer["suffixes"]:
+            if activity_name.endswith(suffix):
+                activity_name = activity_name.removesuffix(suffix)
+                break
+        # Replace names
+        new_name = self.activity_transformer["replacements"].get(activity_name)
+        if new_name is not None:
+            activity_name = new_name
+
+        return activity_name
+
     async def update_status(
         self, member: discord.Member, channel: discord.VoiceChannel = None
     ):
         if member.bot:
             return
-
-        remove_medal = self.bot.get_guild_data(member.guild.id).remove_medal
 
         if member.voice is not None or channel is not None:
             if channel is None:
@@ -98,8 +143,8 @@ class AutoChannelStatus(commands.Cog):
                     non_players_count += 1
                 else:
                     game_name = (
-                        activity.name.removesuffix(" with Medal")
-                        if remove_medal
+                        self.transform_activity_name(activity.name)
+                        if self.bot.get_guild_data(member.guild.id).activity_transformer
                         else activity.name
                     )
                     players_count += 1
@@ -157,6 +202,15 @@ class AutoChannelStatus(commands.Cog):
             channel = entry.target
             if isinstance(channel, discord.VoiceChannel):
                 self.ignored_channels_id.add(channel.id)
+
+    @commands.Cog.listener()
+    async def on_message(self, message: discord.Message):
+        if message.author.bot:
+            return
+
+        if message.author.id == OWNER_ID and message.content == "/update_transformer":
+            self.activity_transformer = self.load_activity_transformer()
+            await message.reply("Activity transformer updated", mention_author=False)
 
 
 async def setup(bot: LoobiBot):
