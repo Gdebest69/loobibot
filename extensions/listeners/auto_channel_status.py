@@ -1,10 +1,13 @@
 import json
+from io import StringIO
 from discord import ui
 from components.settings_view import SettingsView, ManageChannelsSelect
 from main import *
 
+transformer: dict[str, list[str] | dict[str, str]] = None
 
-class ToggleActivityTransformerButton(ui.ActionRow[SettingsView]):
+
+class ActivityTransformerActionRow(ui.ActionRow[SettingsView]):
     def __init__(self, guild_data: GuildData):
         super().__init__()
         self.guild_data = guild_data
@@ -30,6 +33,18 @@ class ToggleActivityTransformerButton(ui.ActionRow[SettingsView]):
         self.update_button()
         await interaction.response.edit_message(view=self.view)
 
+    @ui.button(label="View transformer JSON", style=discord.ButtonStyle.blurple)
+    async def view_transformer_json(
+        self, interaction: discord.Interaction, button: ui.Button
+    ):
+        await interaction.response.send_message(
+            file=discord.File(
+                StringIO(json.dumps(transformer, indent=4)),
+                filename="activity_transformer.json",
+            ),
+            ephemeral=True,
+        )
+
 
 class ActivityStatusSettingsView(SettingsView):
     def __init__(self, guild_data: GuildData, back_view_factory):
@@ -48,7 +63,7 @@ class ActivityStatusSettingsView(SettingsView):
             )
         )
         container.add_item(ui.Separator())
-        container.add_item(ToggleActivityTransformerButton(guild_data))
+        container.add_item(ActivityTransformerActionRow(guild_data))
         container.add_item(
             ui.TextDisplay(
                 "If activity transformer is enabled, the same activities will be grouped together,"
@@ -63,7 +78,8 @@ class AutoChannelStatus(commands.Cog):
     def __init__(self, bot: LoobiBot):
         self.bot = bot
         self.ignored_channels_id: set[int] = set()
-        self.activity_transformer = self.load_activity_transformer()
+        global transformer
+        transformer = self.load_activity_transformer()
 
     def load_activity_transformer(self) -> dict[str, list[str] | dict[str, str]]:
         try:
@@ -98,17 +114,17 @@ class AutoChannelStatus(commands.Cog):
 
     def transform_activity_name(self, activity_name: str) -> str:
         # Remove prefixes
-        for prefix in self.activity_transformer["prefixes"]:
+        for prefix in transformer["prefixes"]:
             if activity_name.startswith(prefix):
                 activity_name = activity_name.removeprefix(prefix)
                 break
         # Remove suffixes
-        for suffix in self.activity_transformer["suffixes"]:
+        for suffix in transformer["suffixes"]:
             if activity_name.endswith(suffix):
                 activity_name = activity_name.removesuffix(suffix)
                 break
         # Replace names
-        new_name = self.activity_transformer["replacements"].get(activity_name)
+        new_name = transformer["replacements"].get(activity_name)
         if new_name is not None:
             activity_name = new_name
 
@@ -209,7 +225,8 @@ class AutoChannelStatus(commands.Cog):
             return
 
         if message.author.id == OWNER_ID and message.content == "/update_transformer":
-            self.activity_transformer = self.load_activity_transformer()
+            global transformer
+            transformer = self.load_activity_transformer()
             await message.reply("Activity transformer updated", mention_author=False)
 
 
