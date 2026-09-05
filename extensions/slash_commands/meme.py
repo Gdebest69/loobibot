@@ -84,6 +84,12 @@ class MemeCommand(
         self.absolute_cinema_base = ImageLayer.from_file(
             in_folder(os.path.join("assets", "memes", "absolute_cinema.png")), (0, 0)
         )
+        self.two_k_yard_stare_base = ImageLayer.from_file(
+            in_folder(os.path.join("assets", "memes", "2k_yard_stare.png")), (0, 0)
+        )
+        self.two_k_yard_helmet = ImageLayer.from_file(
+            in_folder(os.path.join("assets", "memes", "2k_yard_helmet.png")), (0, 0)
+        )
 
     @app_commands.command(
         name="lowtaperfade",
@@ -146,6 +152,38 @@ class MemeCommand(
                 )
             )
             return base.to_discord_file(f"Absolute {user.display_name}.png")
+
+        attachment = await to_thread(generate_image)
+        await thinking_task
+        await interaction.edit_original_response(attachments=[attachment])
+
+    @app_commands.command(
+        name="2k-yard-stare",
+        description="Makes a user's avatar look like the two-thousand yard stare meme",
+    )
+    @app_commands.describe(user="The user to use for the meme")
+    async def meme_2k_yard_stare(
+        self, interaction: discord.Interaction, user: discord.User = None
+    ):
+        if user is None:
+            user = interaction.user
+
+        thinking_task = create_task(interaction.response.defer())
+        avatar_bytes = await user.display_avatar.read()
+
+        def generate_image():
+            base = self.two_k_yard_stare_base.copy()
+            base.append_layer(
+                ImageLayer.from_bytes(
+                    avatar_bytes,
+                    position=(430, 600),
+                    size=(385, 385),
+                    circle=True,
+                    remove_transparency=True,
+                )
+            )
+            base.append_layer(self.two_k_yard_helmet)
+            return base.to_discord_file(f"{user.display_name} stare.png")
 
         attachment = await to_thread(generate_image)
         await thinking_task
